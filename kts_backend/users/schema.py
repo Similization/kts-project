@@ -1,5 +1,9 @@
-from marshmallow import Schema
+from marshmallow import Schema, fields
 
 
 class UserSchema(Schema):
-    pass
+    id = fields.Int(required=True)
+    vk_id = fields.Int(required=False)
+    name = fields.Str(required=False)
+    username = fields.Str(required=False)
+

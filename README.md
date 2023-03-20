@@ -1,1 +1,4 @@
-# [Памятка](https://docs.google.com/document/d/1uiOOXoPd4pUBhJQ-WC-ugwkyg-X-wUcfrNckTd4VW3g/edit?usp=sharing)
+### Contacts
+> **Email:** borbri228@gmail.com\
+> **Full name:** Bakhlanov Daniil\
+> **Telegram:** @Similization
