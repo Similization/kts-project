@@ -6,4 +6,3 @@ __all__ = ("register_urls",)
 
 def register_urls(app: Application, cors: CorsConfig):
     pass
-

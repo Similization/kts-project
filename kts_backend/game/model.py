@@ -2,13 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import (
-    Integer,
-    VARCHAR,
-    Column,
-    TIMESTAMP,
-    ForeignKey
-)
+from sqlalchemy import Integer, VARCHAR, Column, TIMESTAMP, ForeignKey
 
 from sqlalchemy.orm import relationship
 
@@ -17,6 +11,7 @@ from kts_backend.store.database.sqlalchemy_base import db
 
 # class GameScoreDC:
 #     points: int
+
 
 @dataclass
 class PlayerDC:
@@ -52,8 +47,12 @@ class PlayerGameScoreModel(db):
     __tablename__ = "player_game_score"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    vk_id = Column(Integer, ForeignKey("player.vk_id", ondelete="CASCADE"), nullable=False)
-    game_id = Column(Integer, ForeignKey("game.game_id", ondelete="CASCADE"), nullable=False)
+    vk_id = Column(
+        Integer, ForeignKey("player.vk_id", ondelete="CASCADE"), nullable=False
+    )
+    game_id = Column(
+        Integer, ForeignKey("game.game_id", ondelete="CASCADE"), nullable=False
+    )
     score = Column(Integer, nullable=False, default=0)
 
 

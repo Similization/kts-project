@@ -4,7 +4,7 @@ import aiohttp_cors
 from aiohttp.web import (
     Application as AiohttpApplication,
     View as AiohttpView,
-    Request as AiohttpRequest
+    Request as AiohttpRequest,
 )
 
 from aiohttp_session import setup as session_setup

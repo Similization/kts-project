@@ -6,4 +6,3 @@ class UserSchema(Schema):
     vk_id = fields.Int(required=False)
     name = fields.Str(required=False)
     username = fields.Str(required=False)
-

@@ -117,7 +117,7 @@ class VkApiAccessor(BaseAccessor):
     # send message to chat or to user
     async def send_message(self, message: Message) -> None:
         params = {
-            "random_id": random.randint(1, 2 ** 32),
+            "random_id": random.randint(1, 2**32),
             "message": message.text,
             "access_token": self.app.config.bot.token,
         }

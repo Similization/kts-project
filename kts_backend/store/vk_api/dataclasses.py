@@ -20,4 +20,3 @@ class Message:
     user_id: int
     peer_id: str
     text: str
-    

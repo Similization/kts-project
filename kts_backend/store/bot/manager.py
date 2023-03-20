@@ -13,7 +13,9 @@ class BotManager:
         self.bot = None
         self.logger = getLogger("handler")
 
-    async def handle_updates(self, updates: typing.Optional[list[Update]] = None):
+    async def handle_updates(
+        self, updates: typing.Optional[list[Update]] = None
+    ):
         if updates is None:
             return
         for update in updates:

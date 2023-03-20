@@ -1,5 +1,10 @@
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    create_async_engine,
+    async_sessionmaker,
+)
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import URL
 
@@ -25,13 +30,9 @@ class Database:
             password=database.password,
             host=database.host,
             port=database.port,
-            database=database.database
+            database=database.database,
         )
-        self._engine = create_async_engine(
-            url=url,
-            echo=True,
-            future=True
-        )
+        self._engine = create_async_engine(url=url, echo=True, future=True)
         self.session = async_sessionmaker(
             bind=self._engine, expire_on_commit=False, class_=AsyncSession
         )
