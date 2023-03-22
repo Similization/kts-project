@@ -1,4 +1,4 @@
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Any
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -19,7 +19,7 @@ class Database:
         self.app: Application = app
         self._engine: Optional[AsyncEngine] = None
         self._db: Optional[declarative_base] = None
-        self.session: Optional = None
+        self.session: Any = None
 
     async def connect(self, *_: list, **__: dict) -> None:
         self._db = db
