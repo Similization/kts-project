@@ -23,9 +23,7 @@ class GamePlayerListByChatIdView(View):
         players: Optional[
             List[Player]
         ] = await self.store.game.get_players_by_chat_id(chat_id=chat_id)
-        raw_players = [
-            PlayerSchema().dump(player) for player in players
-        ]
+        raw_players = [PlayerSchema().dump(player) for player in players]
         return json_response(data={"players": raw_players})
 
 
@@ -39,7 +37,7 @@ class GameCreateView(View):
                 player_id=player.player_id,
                 score=player.score,
                 is_winner=player.is_winner,
-                in_game=player.in_game
+                in_game=player.in_game,
             )
             for player in self.data["players"]
         ]

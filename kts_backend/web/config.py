@@ -34,16 +34,13 @@ class DatabaseConfig:
 @dataclass
 class Config:
     admin: AdminConfig = None
-    session: SessionConfig = None
     bot: BotConfig = None
     database: DatabaseConfig = None
+    session: SessionConfig = None
 
 
 def setup_config(app: "Application", config: dict):
     app.config = Config(
-        session=SessionConfig(
-            key=config["session"]["key"],
-        ),
         admin=AdminConfig(
             email=config["admin"]["email"],
             password=config["admin"]["password"],
@@ -53,4 +50,7 @@ def setup_config(app: "Application", config: dict):
             group_id=config["bot"]["group_id"],
         ),
         database=DatabaseConfig(**config["database"]),
+        session=SessionConfig(
+            key=config["session"]["key"],
+        ),
     )

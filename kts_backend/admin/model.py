@@ -2,11 +2,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import Optional
 
-from sqlalchemy import (
-    Integer,
-    VARCHAR,
-    Column
-)
+from sqlalchemy import Integer, VARCHAR, Column, ForeignKey
 
 from kts_backend.store.database.sqlalchemy_base import db
 
@@ -23,13 +19,17 @@ class Admin:
 
     @classmethod
     def from_session(cls, session: Optional[dict]) -> Optional["Admin"]:
-        return cls(admin_id=session["admin"]["id"], email=session["admin"]["email"])
+        return cls(
+            admin_id=session["admin"]["id"], email=session["admin"]["email"]
+        )
 
 
 class AdminModel(db):
     __tablename__ = "admin"
 
     admin_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, unique=True)
+    user_id = Column(
+        Integer, ForeignKey("user.user_id", ondelete="SET NULL"), nullable=True
+    )
     email = Column(VARCHAR(60), nullable=False)
     password = Column(VARCHAR(75), nullable=False)

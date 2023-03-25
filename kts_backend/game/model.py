@@ -2,14 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import (
-    Integer,
-    VARCHAR,
-    Column,
-    TIMESTAMP,
-    ForeignKey,
-    BOOLEAN
-)
+from sqlalchemy import Integer, VARCHAR, Column, TIMESTAMP, ForeignKey, BOOLEAN
 
 from kts_backend.store.database.sqlalchemy_base import db
 from kts_backend.user.model import User
@@ -77,7 +70,9 @@ class PlayerModel(db):
     __tablename__ = "player"
 
     player_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False
+    )
     score = Column(Integer, nullable=False, default=0)
     is_winner = Column(BOOLEAN)
     in_game = Column(BOOLEAN, default=True)
@@ -96,7 +91,9 @@ class GameModel(db):
 
     game_id = Column(Integer, primary_key=True, autoincrement=True)
     game_data_id = Column(
-        Integer, ForeignKey("game_data.game_data_id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("game_data.game_data_id", ondelete="CASCADE"),
+        nullable=False,
     )
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     chat_id = Column(Integer, nullable=False)
@@ -107,7 +104,9 @@ class PlayerGameModel(db):
 
     player_game_id = Column(Integer, primary_key=True, autoincrement=True)
     player_id = Column(
-        Integer, ForeignKey("player.player_id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("player.player_id", ondelete="CASCADE"),
+        nullable=False,
     )
     game_id = Column(
         Integer, ForeignKey("game.game_id", ondelete="CASCADE"), nullable=False

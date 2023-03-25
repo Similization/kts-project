@@ -15,16 +15,15 @@ class AdminLoginView(View):
     @response_schema(AdminSchema, 200)
     async def post(self):
         data = self.request["data"]
-        admin: Optional[Admin] = await self.store.a.get_by_email(data["email"])
+        admin: Optional[Admin] = await self.store.admin.get_by_email(
+            data["email"]
+        )
         # check conditions
         if admin is None or not admin.is_password_valid(data["password"]):
             raise HTTPForbidden
 
         session = await new_session(request=self.request)
-        session["admin"] = {
-            "id": admin.admin_id,
-            "email": admin.email
-        }
+        session["admin"] = {"id": admin.admin_id, "email": admin.email}
 
         return json_response(data=AdminSchema().dump(admin))
 

@@ -1,4 +1,5 @@
 import logging
+from hashlib import sha256
 from pathlib import Path
 from unittest.mock import AsyncMock
 
@@ -8,6 +9,7 @@ from aiohttp.test_utils import loop_context, TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from kts_backend.admin.model import AdminModel, Admin
 from kts_backend.store import Database
 from kts_backend.store import Store
 from kts_backend.web.app import setup_app
@@ -74,3 +76,27 @@ def config(server) -> Config:
 @pytest.fixture(autouse=True)
 def cli(aiohttp_client, event_loop, server) -> TestClient:
     return event_loop.run_until_complete(aiohttp_client(server))
+
+
+@pytest.fixture
+async def authed_cli(cli, config) -> TestClient:
+    await cli.post(
+        "/admin.login",
+        data={
+            "email": config.admin.email,
+            "password": config.admin.password,
+        },
+    )
+    yield cli
+
+
+@pytest.fixture(autouse=True)
+async def admin(cli, db_session, config: Config) -> Admin:
+    new_admin = AdminModel(
+        email=config.admin.email,
+        password=sha256(config.admin.password.encode()).hexdigest(),
+    )
+    async with db_session.begin() as session:
+        session.add(new_admin)
+
+    return Admin(admin_id=new_admin.id, email=new_admin.email)

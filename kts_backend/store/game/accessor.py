@@ -5,10 +5,14 @@ from sqlalchemy import select, update, delete, insert, func, and_
 
 from kts_backend.base.base_accessor import BaseAccessor
 from kts_backend.game.model import (
-    Player, PlayerModel,
-    Game, GameModel,
-    GameData, GameDataModel,
-    PlayerGame, PlayerGameModel
+    Player,
+    PlayerModel,
+    Game,
+    GameModel,
+    GameData,
+    GameDataModel,
+    PlayerGame,
+    PlayerGameModel,
 )
 
 
@@ -25,11 +29,13 @@ class GameAccessor(BaseAccessor):
             user_id=player_model.user_id,
             score=player_model.score,
             in_game=player_model.in_game,
-            is_winner=player_model.is_winner
+            is_winner=player_model.is_winner,
         )
 
     @staticmethod
-    def player_model_list2player_list(player_model_list: List[PlayerModel]) -> List[Player]:
+    def player_model_list2player_list(
+        player_model_list: List[PlayerModel],
+    ) -> List[Player]:
         """
         Convert list of PlayerModel objects to list of Player objects
         :param player_model_list: List[PlayerModel])
@@ -42,7 +48,7 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def game_model2game(
-            game_model: GameModel, players: List[Player] | List[PlayerModel]
+        game_model: GameModel, players: List[Player] | List[PlayerModel]
     ) -> Game:
         """
         Convert GameModel object to Game
@@ -60,7 +66,7 @@ class GameAccessor(BaseAccessor):
             game_data_id=game_model.game_data_id,
             created_at=game_model.created_at,
             chat_id=game_model.chat_id,
-            players=players
+            players=players,
         )
 
     @staticmethod
@@ -73,12 +79,12 @@ class GameAccessor(BaseAccessor):
         return GameData(
             game_data_id=game_data_model.game_data_id,
             question=game_data_model.question,
-            answer=game_data_model.answer
+            answer=game_data_model.answer,
         )
 
     @staticmethod
     def game_data_model_list2game_data_list(
-            game_data_model_list: List[GameDataModel]
+        game_data_model_list: List[GameDataModel],
     ) -> List[GameData]:
         """
         Convert list of GameDataModel objects to list of GameData objects
@@ -86,7 +92,9 @@ class GameAccessor(BaseAccessor):
         :return: List[GameData]
         """
         return [
-            GameAccessor.game_data_model2game_data(game_data_model=game_data_model)
+            GameAccessor.game_data_model2game_data(
+                game_data_model=game_data_model
+            )
             for game_data_model in game_data_model_list
         ]
 
@@ -108,7 +116,9 @@ class GameAccessor(BaseAccessor):
         """
         return [player.__dict__ for player in player_list]
 
-    async def get_player(self, player_id: List[int] | int) -> List[Player] | Player:
+    async def get_player(
+        self, player_id: List[int] | int
+    ) -> List[Player] | Player:
         """
         Get player objects from database
         :param player_id: List[int] | int
@@ -128,13 +138,9 @@ class GameAccessor(BaseAccessor):
         async with self.app.database.session.begin() as session:
             player_model = await session.query(PlayerModel).get(player_id)
 
-            return self.player_model2player(
-                player_model=player_model
-            )
+            return self.player_model2player(player_model=player_model)
 
-    async def get_player_list(
-            self, player_id_list: List[int]
-    ) -> List[Player]:
+    async def get_player_list(self, player_id_list: List[int]) -> List[Player]:
         """
         Get list of players from database
         :param player_id_list: List[int]
@@ -157,10 +163,12 @@ class GameAccessor(BaseAccessor):
             await session.commit()
 
         return self.player_model_list2player_list(
-                player_model_list=player_model_list
-            )
+            player_model_list=player_model_list
+        )
 
-    async def create_player(self, player: List[Player] | Player) -> List[Player] | Player:
+    async def create_player(
+        self, player: List[Player] | Player
+    ) -> List[Player] | Player:
         """
         Create player objects in database
         :param player: List[Player] | Player
@@ -180,17 +188,15 @@ class GameAccessor(BaseAccessor):
         async with self.app.database.session.begin() as session:
             res = await session.execute(
                 insert(PlayerModel).returning(PlayerModel),
-                self.player2dict(player=player)
+                self.player2dict(player=player),
             )
             player_model: Optional[PlayerModel] = res.scalar()
             await session.commit()
 
-            return self.player_model2player(
-                player_model=player_model
-            )
+            return self.player_model2player(player_model=player_model)
 
     async def create_player_list(
-            self, player_list: List[Player]
+        self, player_list: List[Player]
     ) -> List[Player]:
         """
         Create list of players in database
@@ -206,7 +212,7 @@ class GameAccessor(BaseAccessor):
         async with self.app.database.session.begin() as session:
             res = await session.execute(
                 insert(PlayerModel).returning(PlayerModel),
-                self.player_list2dict_list(player_list=player_list)
+                self.player_list2dict_list(player_list=player_list),
             )
             player_model_list: Optional[List[PlayerModel]] = res.scalars()
             await session.commit()
@@ -215,7 +221,9 @@ class GameAccessor(BaseAccessor):
                 player_model_list=player_model_list
             )
 
-    async def update_player(self, player: List[Player] | Player) -> List[Player] | Player:
+    async def update_player(
+        self, player: List[Player] | Player
+    ) -> List[Player] | Player:
         """
         Update player objects in database
         :param player: List[Player] | Player
@@ -235,16 +243,16 @@ class GameAccessor(BaseAccessor):
         async with self.app.database.session.begin() as session:
             res = await session.execute(
                 update(PlayerModel).returning(PlayerModel),
-                self.player2dict(player=player)
+                self.player2dict(player=player),
             )
             player_model: Optional[PlayerModel] = res.scalar()
             await session.commit()
 
-            return self.player_model2player(
-                player_model=player_model
-            )
+            return self.player_model2player(player_model=player_model)
 
-    async def update_player_list(self, player_list: List[Player]) -> List[Player]:
+    async def update_player_list(
+        self, player_list: List[Player]
+    ) -> List[Player]:
         """
         pdate list of players in database
         :param player_list: List[Player]
@@ -259,7 +267,7 @@ class GameAccessor(BaseAccessor):
         async with self.app.database.session.begin() as session:
             res = await session.execute(
                 update(PlayerModel).returning(PlayerModel),
-                self.player_list2dict_list(player_list=player_list)
+                self.player_list2dict_list(player_list=player_list),
             )
             player_model_list: Optional[List[PlayerModel]] = res.scalars()
             await session.commit()
@@ -268,7 +276,9 @@ class GameAccessor(BaseAccessor):
                 player_model_list=player_model_list
             )
 
-    async def delete_player(self, player_id: List[int] | int) -> List[Player] | Player:
+    async def delete_player(
+        self, player_id: List[int] | int
+    ) -> List[Player] | Player:
         """
         Delete player objects from database
         :param player_id: List[int] | int
@@ -286,16 +296,16 @@ class GameAccessor(BaseAccessor):
         :return: Player
         """
         async with self.app.database.session.begin() as session:
-            player_model: Optional[PlayerModel] = await session.query(PlayerModel).get(player_id)
+            player_model: Optional[PlayerModel] = await session.query(
+                PlayerModel
+            ).get(player_id)
             if player_model:
                 await session.delete(player_model)
 
-            return self.player_model2player(
-                player_model=player_model
-            )
+            return self.player_model2player(player_model=player_model)
 
     async def delete_player_list(
-            self, player_id_list: List[int]
+        self, player_id_list: List[int]
     ) -> List[Player]:
         """
         Create list of players in database
@@ -319,20 +329,22 @@ class GameAccessor(BaseAccessor):
             await session.commit()
 
         return self.player_model_list2player_list(
-                player_model_list=player_model_list
-            )
+            player_model_list=player_model_list
+        )
 
     async def get_game(self, game_id):
         async with self.app.database.session.begin() as session:
-            game: Optional[GameModel] = await session.query(GameModel).get(game_id)
+            game: Optional[GameModel] = await session.query(GameModel).get(
+                game_id
+            )
 
         players = await self.get_players_from_game(game_id=game.game_id)
         return self.game_model2game(game_model=game, players=players)
 
-    async def create_game(
-            self, players: List[Player], chat_id: int
-    ) -> Game:
-        statement = insert(GameModel).values(chat_id=chat_id).returning(GameModel)
+    async def create_game(self, players: List[Player], chat_id: int) -> Game:
+        statement = (
+            insert(GameModel).values(chat_id=chat_id).returning(GameModel)
+        )
         players_id = [{"vk_id": player.vk_id} for player in players]
 
         async with self.app.database.session.begin() as session:
@@ -357,9 +369,7 @@ class GameAccessor(BaseAccessor):
         players = await self.get_players_by_game_id(game_id=game.game_id)
         return self.game_model2game(game_model=game, players=players)
 
-    async def get_players_by_chat_id(
-            self, chat_id: int
-    ) -> List[Player] | None:
+    async def get_players_by_chat_id(self, chat_id: int) -> List[Player] | None:
         query = (
             select(PlayerModel)
             .join(PlayerGameModel)
@@ -377,9 +387,7 @@ class GameAccessor(BaseAccessor):
                 )
             return None
 
-    async def get_players_from_game(
-            self, game_id: int
-    ) -> List[Player] | List:
+    async def get_players_from_game(self, game_id: int) -> List[Player] | List:
         query = (
             select(PlayerModel)
             .join(PlayerGameModel)
@@ -389,9 +397,7 @@ class GameAccessor(BaseAccessor):
             res = await session.execute(query)
             players: Optional[List[PlayerModel]] = res.scalars()
 
-        return self.player_model_list2player_list(
-            player_model_list=players
-        )
+        return self.player_model_list2player_list(player_model_list=players)
 
     async def get_last_game(self) -> Game | None:
         subquery = select(func.max(GameModel.created_at))
@@ -410,7 +416,9 @@ class GameAccessor(BaseAccessor):
             res = await session.execute(query)
             game_data_list: Optional[List[GameDataModel]] = res.scalars()
 
-            return self.game_data_model_list2game_data_list(game_data_model_list=game_data_list)
+            return self.game_data_model_list2game_data_list(
+                game_data_model_list=game_data_list
+            )
 
     async def set_game_winner(self, game_id, vk_id: int):
         async with self.app.database.session.begin() as session:
@@ -418,16 +426,16 @@ class GameAccessor(BaseAccessor):
                 session.query(PlayerGameModel)
                 .filter(
                     PlayerGameModel.game_id == game_id,
-                    PlayerGameModel.vk_id == vk_id
+                    PlayerGameModel.vk_id == vk_id,
                 )
-                .update({'is_winner': True})
+                .update({"is_winner": True})
             )
             _ = await (
                 session.query(PlayerGameModel)
                 .filter(
                     PlayerGameModel.game_id == game_id,
-                    PlayerGameModel.vk_id != vk_id
+                    PlayerGameModel.vk_id != vk_id,
                 )
-                .update({'is_winner': False})
+                .update({"is_winner": False})
             )
             await session.commit()

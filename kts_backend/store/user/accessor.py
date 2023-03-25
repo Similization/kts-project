@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from sqlalchemy import select, update, insert, delete
+from sqlalchemy.exc import SQLAlchemyError
 
 from kts_backend.base.base_accessor import BaseAccessor
 from kts_backend.user.model import User, UserModel
@@ -11,7 +12,6 @@ class UserError(Exception):
 
 
 class UserAccessor(BaseAccessor):
-
     @staticmethod
     def user_model2user(user_model: UserModel) -> User:
         """
@@ -24,11 +24,13 @@ class UserAccessor(BaseAccessor):
             vk_id=user_model.vk_id,
             name=user_model.name,
             last_name=user_model.last_name,
-            username=user_model.username
+            username=user_model.username,
         )
 
     @staticmethod
-    def user_model_list2user_list(user_model_list: List[UserModel]) -> List[User]:
+    def user_model_list2user_list(
+        user_model_list: List[UserModel],
+    ) -> List[User]:
         """
         Convert list of UserModel objects to list of User objects
         :param user_model_list: List[UserModel]
@@ -57,7 +59,9 @@ class UserAccessor(BaseAccessor):
         """
         return [user.__dict__ for user in user_list]
 
-    async def get_user(self, user_id: List[int] | int) -> List[User] | User | None:
+    async def get_user(
+        self, user_id: List[int] | int
+    ) -> List[User] | User | None:
         """
         Get users from database by their ids
         :param user_id: List[int] | int
@@ -75,8 +79,9 @@ class UserAccessor(BaseAccessor):
         :return: User | None
         """
         async with self.app.database.session.begin() as session:
-            res = await session.query(UserModel).get(user_id)
-            user_model: Optional[UserModel] = res.scalar()
+            user_model: Optional[UserModel] = await session.get(
+                UserModel, user_id
+            )
             if user_model:
                 return self.user_model2user(user_model=user_model)
             return None
@@ -98,43 +103,61 @@ class UserAccessor(BaseAccessor):
             res = await session.execute(statement)
             user_model_list: Optional[List[UserModel]] = res.scalars()
             if user_model_list:
-                return self.user_model_list2user_list(user_model_list=user_model_list)
+                return self.user_model_list2user_list(
+                    user_model_list=user_model_list
+                )
             return None
 
-    async def create_user(self, user: List[User] | User) -> List[User] | User:
+    async def get_one_user_by_vk_id(self, vk_id: int) -> User | None:
+        """
+        Get one user from database by his vk id
+        :param vk_id: int
+        :return: User | None
+        """
+        statement = select(UserModel).filter_by(vk_id=vk_id)
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+            user_model: Optional[UserModel] = res.scalar()
+            if user_model:
+                return self.user_model2user(user_model=user_model)
+            return None
+
+    async def create_user(self, user: List[dict] | dict) -> List[User] | User:
         """
         Create users in database if they do not exist
         otherwise throws an exception
-        :param user: List[User] | User
+        :param user: List[dict] | dict
         :return: List[User] | User
         """
-        if type(user) is User:
+        if type(user) is dict:
             return await self.create_one_user(user=user)
         if type(user) is list:
             return await self.create_user_list(user_list=user)
 
-    async def create_one_user(self, user: User) -> User:
+    async def create_one_user(self, user: dict) -> User:
         """
         Create one user if he does not exist
         otherwise throws an exception
-        :param user: User
+        :param user: dict
         :return: User
         """
-        if await self.get_user(user_id=user.user_id):
+        if await self.get_one_user_by_vk_id(vk_id=user.get("vk_id")):
             raise UserError("User is already exists")
 
         async with self.app.database.session.begin() as session:
-            session.add(instance=user)
-            user_model: Optional[UserModel] = session.new
+            res = await session.execute(
+                insert(UserModel).returning(UserModel), user
+            )
+            user_model: Optional[UserModel] = res.scalar()
             await session.commit()
 
             return self.user_model2user(user_model=user_model)
 
-    async def create_user_list(self, user_list: List[User]) -> List[User]:
+    async def create_user_list(self, user_list: List[dict]) -> List[User]:
         """
         Create user list if such users does not exist
         otherwise throws an exception
-        :param user_list: List[User]
+        :param user_list: List[dict]
         :return: List[User]
         """
         # TODO: var 1
@@ -143,48 +166,54 @@ class UserAccessor(BaseAccessor):
         #     result_list.append(await self.create_one_user(user=user))
         # return result_list
         # TODO: var 2
-        user2dict_list = self.user_list2dict_list(user_list=user_list)
         async with self.app.database.session.begin() as session:
             res = await session.execute(
-                insert(UserModel).returning(UserModel),
-                user2dict_list
+                insert(UserModel).returning(UserModel), user_list
             )
-            user_model_list: Optional[List[UserModel]] = res.scalar()
+            user_model_list: Optional[List[UserModel]] = res.scalars()
             await session.commit()
 
-            return self.user_model_list2user_list(user_model_list=user_model_list)
+            return self.user_model_list2user_list(
+                user_model_list=user_model_list
+            )
 
-    async def update_user(self, user: List[User] | User) -> List[User] | User:
+    async def update_user(self, user: List[dict] | dict) -> List[User] | User:
         """
         Update users if such users does not exist
         otherwise throws an exception
-        :param user: List[User] | User
+        :param user: List[dict] | dict
         :return: List[User] | User
         """
-        if type(user) is User:
+        if type(user) is dict:
             return await self.update_one_user(user=user)
         if type(user) is list:
             return await self.update_user_list(user_list=user)
 
-    async def update_one_user(self, user: User) -> User:
+    async def update_one_user(self, user: dict) -> User:
         """
         Update one user if he does not exist
         otherwise throws an exception
         :param user: User
         :return: User
         """
-        if not self.get_user(user_id=user.user_id):
+        user_id: int = user.get("user_id")
+        if not self.get_one_user(user_id=user_id):
             raise UserError("User does not exist")
+        user.pop("user_id")
 
-        user2dict = self.user2dict(user=user)
         async with self.app.database.session.begin() as session:
-            res = await session.query(UserModel).filter(UserModel.user_id == user).update(user2dict)
+            res = await session.execute(
+                update(UserModel)
+                .where(UserModel.user_id == user_id)
+                .returning(UserModel),
+                user,
+            )
             user_model: Optional[UserModel] = res.scalar()
             await session.commit()
 
             return self.user_model2user(user_model=user_model)
 
-    async def update_user_list(self, user_list: List[User]) -> List[User]:
+    async def update_user_list(self, user_list: List[dict]) -> List[User]:
         """
         Update user list if such users does not exist
         otherwise throws an exception
@@ -192,28 +221,34 @@ class UserAccessor(BaseAccessor):
         :return:
         """
         # TODO: var 1
-        # result_list = []
-        # for user in user_list:
-        #     result_list.append(await self.update_one_user(user=user))
-        # return result_list
+        result_list = []
+        for user in user_list:
+            result_list.append(await self.update_one_user(user=user))
+        return result_list
         # TODO: var 2
+        # user_id_list = []
+        # for user in user_list:
+        #     user_id_list.append(user.pop("user_id"))
+        #
+        # async with self.app.database.session.begin() as session:
+        #     res = await session.execute(
+        #         update(UserModel).where(UserModel.user_id.in_(user_id_list)).returning(UserModel),
+        #         user_list
+        #     )
+        #     user_model_list: Optional[List[UserModel]] = res.scalars()
+        #     await session.commit()
+        #
+        #     return self.user_model_list2user_list(
+        #         user_model_list=user_model_list
+        #     )
 
-        user_list2dict_list = self.user_list2dict_list(user_list=user_list)
-        async with self.app.database.session.begin() as session:
-            res = await session.execute(
-                update(UserModel).returning(UserModel),
-                user_list2dict_list
-            )
-            user_model_list: Optional[List[UserModel]] = res.scalars()
-            await session.commit()
-
-            return self.user_model_list2user_list(user_model_list=user_model_list)
-
-    async def create_or_update_user(self, user: List[User] | User) -> List[User] | User:
+    async def create_or_update_user(
+        self, user: List[dict] | dict
+    ) -> List[User] | User:
         """
         Create users or update information about them in database
         otherwise trows an exception
-        :param user: List[User] | User
+        :param user: List[dict] | dict
         :return: List[User] | User
         """
         # TODO: var 1
@@ -248,11 +283,13 @@ class UserAccessor(BaseAccessor):
     async def delete_one_user(self, user_id: int) -> User:
         """
         Delete one user from database
-        :param user_id:
-        :return:
+        :param user_id: int
+        :return: User
         """
         async with self.app.database.session.begin() as session:
-            user_model: Optional[UserModel] = await session.query(UserModel).get(user_id)
+            user_model: Optional[UserModel] = await session.get(
+                UserModel, user_id
+            )
             if user_model:
                 await session.delete(user_model)
             await session.commit()
@@ -262,8 +299,8 @@ class UserAccessor(BaseAccessor):
     async def delete_user_list(self, user_id_list: List[int]) -> List[User]:
         """
         Delete list of users from database
-        :param user_id_list:
-        :return:
+        :param user_id_list: List[int]
+        :return: List[User]
         """
         # TODO: var 1
         # result_list: List[User] = []
@@ -281,4 +318,6 @@ class UserAccessor(BaseAccessor):
             user_model_list: Optional[List[UserModel]] = res.scalars()
             await session.commit()
 
-            return self.user_model_list2user_list(user_model_list=user_model_list)
+            return self.user_model_list2user_list(
+                user_model_list=user_model_list
+            )

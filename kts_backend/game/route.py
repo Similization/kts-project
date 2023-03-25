@@ -2,9 +2,7 @@ from kts_backend.game.view import (
     GamePlayerListByChatIdView,
     GameCreateView,
     GameLastView,
-
     PlayerInGameView,
-
 )
 from kts_backend.web.app import Application
 

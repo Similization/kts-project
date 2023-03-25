@@ -6,7 +6,7 @@ from kts_backend.user.view import (
     UserUpdateView,
     UserUpdateManyView,
     UserDeleteView,
-    UserDeleteManyView
+    UserDeleteManyView,
 )
 from kts_backend.web.app import Application
 

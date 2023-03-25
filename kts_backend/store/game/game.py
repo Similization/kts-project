@@ -45,7 +45,9 @@ class PoleChudesGame:
 
     @staticmethod
     def check_letter(letter: str) -> bool:
-        return len(letter) == 1 and ("a" <= letter <= "z" or "A" <= letter <= "Z")
+        return len(letter) == 1 and (
+            "a" <= letter <= "z" or "A" <= letter <= "Z"
+        )
 
     def guess_letter_result(self, letter: str) -> bool:
         if letter in self.guessed_letters or letter not in self.game.answer:
@@ -54,7 +56,9 @@ class PoleChudesGame:
         for i in range(len(self.game.answer)):
             if self.game.answer[i] != letter:
                 continue
-            self.guessed_word = self.guessed_word[:i] + letter + self.guessed_word[i+1:]
+            self.guessed_word = (
+                self.guessed_word[:i] + letter + self.guessed_word[i + 1 :]
+            )
         return True
 
     @staticmethod

@@ -11,6 +11,7 @@ from aiohttp_session import setup as session_setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from aiohttp_apispec import setup_aiohttp_apispec
 
+from kts_backend.admin.model import Admin
 from kts_backend.store import setup_store, Store
 from kts_backend.store.database.database import Database
 from kts_backend.web.config import setup_config, Config
@@ -30,6 +31,8 @@ class Application(AiohttpApplication):
 
 
 class Request(AiohttpRequest):
+    admin: Optional[Admin] = None
+
     @property
     def app(self) -> Application:
         return super().app()

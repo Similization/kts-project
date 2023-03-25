@@ -1,10 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import (
-    Integer,
-    VARCHAR,
-    Column
-)
+from sqlalchemy import Integer, VARCHAR, Column
 
 from kts_backend.store.database.sqlalchemy_base import db
 
