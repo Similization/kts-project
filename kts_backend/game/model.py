@@ -1,66 +1,114 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
-from sqlalchemy import Integer, VARCHAR, Column, TIMESTAMP, ForeignKey
-
-from sqlalchemy.orm import relationship
+from sqlalchemy import (
+    Integer,
+    VARCHAR,
+    Column,
+    TIMESTAMP,
+    ForeignKey,
+    BOOLEAN
+)
 
 from kts_backend.store.database.sqlalchemy_base import db
-
-
-# class GameScoreDC:
-#     points: int
+from kts_backend.user.model import User
 
 
 @dataclass
-class PlayerDC:
-    vk_id: int
-    name: str
-    last_name: str
+class Player:
+    player_id: int
+    user_id: int
+    score: int
+    is_winner: Optional[bool]
+    in_game: bool
 
 
 @dataclass
-class GameDC:
+class GameData:
+    game_data_id: int
+    question: str
+    answer: str
+
+
+@dataclass
+class Game:
     game_id: int
+    game_data_id: int
     created_at: datetime
     chat_id: int
 
-    players: list[PlayerDC]
+    players: List[Player]
 
 
-# class GameScoreModel(db):
-#     __tablename__ = "game_score"
-#
-#     points = Column(Integer, nullable=False)
+@dataclass
+class PlayerGame:
+    player_game_id: int
+    player_id: int
+    game_id: int
+
+
+@dataclass
+class PlayerFull:
+    user: User
+    player_id: int
+    score: int
+    is_winner: bool
+
+
+@dataclass
+class GameFull:
+    game_id: int
+    game_data: GameData
+    created_at: datetime
+    chat_id: int
+
+    players: List[PlayerFull]
+
+
+@dataclass
+class PlayerGameFull:
+    player_game_id: int
+    player: Player
+    game: Game
 
 
 class PlayerModel(db):
     __tablename__ = "player"
 
-    vk_id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(VARCHAR(45), nullable=False)
-    last_name = Column(VARCHAR(45), nullable=False)
-
-
-class PlayerGameScoreModel(db):
-    __tablename__ = "player_game_score"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    vk_id = Column(
-        Integer, ForeignKey("player.vk_id", ondelete="CASCADE"), nullable=False
-    )
-    game_id = Column(
-        Integer, ForeignKey("game.game_id", ondelete="CASCADE"), nullable=False
-    )
+    player_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False)
     score = Column(Integer, nullable=False, default=0)
+    is_winner = Column(BOOLEAN)
+    in_game = Column(BOOLEAN, default=True)
+
+
+class GameDataModel(db):
+    __tablename__ = "game_data"
+
+    game_data_id = Column(Integer, primary_key=True, autoincrement=True)
+    question = Column(VARCHAR(90), nullable=False, unique=True)
+    answer = Column(VARCHAR(30), nullable=False, unique=True)
 
 
 class GameModel(db):
     __tablename__ = "game"
 
     game_id = Column(Integer, primary_key=True, autoincrement=True)
+    game_data_id = Column(
+        Integer, ForeignKey("game_data.game_data_id", ondelete="CASCADE"), nullable=False
+    )
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     chat_id = Column(Integer, nullable=False)
 
-    # players: List["PlayerModel"] = relationship("PlayerModel", cascade="all,delete", backref="game")
+
+class PlayerGameModel(db):
+    __tablename__ = "player_game_data"
+
+    player_game_id = Column(Integer, primary_key=True, autoincrement=True)
+    player_id = Column(
+        Integer, ForeignKey("player.player_id", ondelete="CASCADE"), nullable=False
+    )
+    game_id = Column(
+        Integer, ForeignKey("game.game_id", ondelete="CASCADE"), nullable=False
+    )

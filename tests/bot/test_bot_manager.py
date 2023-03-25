@@ -1,8 +1,4 @@
-from kts_backend.store.vk_api.dataclasses import (
-    Message,
-    Update,
-    UpdateObject
-)
+from kts_backend.store.vk_api.dataclasses import Message, Update, UpdateObject
 
 
 class TestHandleUpdates:

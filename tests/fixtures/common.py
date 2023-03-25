@@ -22,7 +22,7 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def server():
-    config = yaml.safe_load(Path("etc/config.yaml").read_text())
+    config = yaml.safe_load(Path("config.yaml").read_text())
     app = setup_app(config=config)
 
     app.on_startup.clear()
@@ -55,7 +55,9 @@ async def clear_db(server):
         connection = session.connection()
         for table in server.database._db.metadata.tables:
             await session.execute(text(f"TRUNCATE {table} CASCADE"))
-            await session.execute(text(f"ALTER SEQUENCE {table}_id_seq RESTART WITH 1"))
+            await session.execute(
+                text(f"ALTER SEQUENCE {table}_id_seq RESTART WITH 1")
+            )
 
         await session.commit()
         connection.close()

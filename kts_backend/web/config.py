@@ -10,10 +10,10 @@ class SessionConfig:
     key: str
 
 
-# @dataclass
-# class AdminConfig:
-#     email: str
-#     password: str
+@dataclass
+class AdminConfig:
+    email: str
+    password: str
 
 
 @dataclass
@@ -33,7 +33,7 @@ class DatabaseConfig:
 
 @dataclass
 class Config:
-    # admin: AdminConfig
+    admin: AdminConfig = None
     session: SessionConfig = None
     bot: BotConfig = None
     database: DatabaseConfig = None
@@ -44,10 +44,10 @@ def setup_config(app: "Application", config: dict):
         session=SessionConfig(
             key=config["session"]["key"],
         ),
-        # admin=AdminConfig(
-        #     email=raw_config["admin"]["email"],
-        #     password=raw_config["admin"]["password"],
-        # ),
+        admin=AdminConfig(
+            email=config["admin"]["email"],
+            password=config["admin"]["password"],
+        ),
         bot=BotConfig(
             token=config["bot"]["key"],
             group_id=config["bot"]["group_id"],

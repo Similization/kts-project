@@ -98,7 +98,7 @@ class VkApiAccessor(BaseAccessor):
                 )
             await self.app.store.bots_manager.handle_updates(updates)
 
-    # get users from chat
+    # get user from chat
     async def get_chat_users(self, chat_id: str):
         async with self.session.get(
             self._build_query(
