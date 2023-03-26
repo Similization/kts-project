@@ -1,7 +1,7 @@
 from typing import Optional
 from hashlib import sha256
 
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 
 from kts_backend.admin.model import Admin, AdminModel
 from kts_backend.base.base_accessor import BaseAccessor
@@ -27,10 +27,9 @@ class AdminAccessor(BaseAccessor):
         :param email: str
         :return: Admin | None
         """
+        statement = select(AdminModel).filter_by(email=email)
         async with self.app.database.session.begin() as session:
-            res = await session.query(AdminModel).filter(
-                AdminModel.email == email
-            )
+            res = await session.execute(statement=statement)
             admin_model: Optional[AdminModel] = res.scalar()
 
             if admin_model:
@@ -52,11 +51,12 @@ class AdminAccessor(BaseAccessor):
         new_password = sha256(password.encode()).hexdigest()
         statement = insert(AdminModel).values(
             email=email, password=new_password
-        )
+        ).returning(AdminModel)
         async with self.app.database.session.begin() as session:
-            await session.execute(statement=statement)
+            res = await session.execute(statement=statement)
+            admin_model: Optional[AdminModel] = res.scalar()
             await session.commit()
-        return await self.get_admin_by_email(email=email)
+        return self.admin_model2admin(admin_model=admin_model)
 
     async def update_admin(self, admin: Admin) -> Admin:
         pass

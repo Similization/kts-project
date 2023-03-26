@@ -4,11 +4,11 @@ from tests.utils import ok_response
 
 class TestAdminLoginView:
     async def test_create_on_startup(self, store: Store, config):
-        admin = await store.admin.get_by_email(config.admin.email)
+        admin = await store.admin.get_admin_by_email(email=config.admin.email)
         assert admin is not None
         assert admin.email == config.admin.email
         assert admin.password != config.admin.password
-        assert admin.id == 1
+        assert admin.admin_id == 1
 
     async def test_success(self, cli, config):
         resp = await cli.post(
@@ -22,8 +22,9 @@ class TestAdminLoginView:
         data = await resp.json()
         assert data == ok_response(
             {
-                "id": 1,
+                "admin_id": 1,
                 "email": config.admin.email,
+                "user_id": None
             }
         )
 

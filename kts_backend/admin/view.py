@@ -14,9 +14,9 @@ class AdminLoginView(View):
     @request_schema(AdminSchema)
     @response_schema(AdminSchema, 200)
     async def post(self):
-        data = self.request["data"]
-        admin: Optional[Admin] = await self.store.admin.get_by_email(
-            data["email"]
+        data: dict = self.request["data"]
+        admin: Optional[Admin] = await self.store.admin.get_admin_by_email(
+            email=data.get("email")
         )
         # check conditions
         if admin is None or not admin.is_password_valid(data["password"]):

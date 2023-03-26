@@ -31,5 +31,5 @@ class AdminModel(db):
     user_id = Column(
         Integer, ForeignKey("user.user_id", ondelete="SET NULL"), nullable=True
     )
-    email = Column(VARCHAR(60), nullable=False)
+    email = Column(VARCHAR(60), nullable=False, unique=True)
     password = Column(VARCHAR(75), nullable=False)

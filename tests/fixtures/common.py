@@ -8,6 +8,7 @@ import yaml
 from aiohttp.test_utils import loop_context, TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.util._collections import FacadeDict
 
 from kts_backend.admin.model import AdminModel, Admin
 from kts_backend.store import Database
@@ -55,10 +56,15 @@ async def clear_db(server):
     try:
         session = AsyncSession(server.database._engine)
         connection = session.connection()
-        for table in server.database._db.metadata.tables:
-            await session.execute(text(f"TRUNCATE {table} CASCADE"))
+        table_list: FacadeDict = server.database._db.metadata.tables
+        for table in table_list.values():
+            await session.execute(text(f"TRUNCATE \"{table}\" CASCADE"))
             await session.execute(
-                text(f"ALTER SEQUENCE {table}_id_seq RESTART WITH 1")
+                text(
+                    f"ALTER SEQUENCE "
+                    f"{table}_{table.primary_key.columns_autoinc_first[0].description}_seq "
+                    f"RESTART WITH 1"
+                )
             )
 
         await session.commit()
@@ -99,4 +105,4 @@ async def admin(cli, db_session, config: Config) -> Admin:
     async with db_session.begin() as session:
         session.add(new_admin)
 
-    return Admin(admin_id=new_admin.id, email=new_admin.email)
+    return Admin(admin_id=new_admin.admin_id, email=new_admin.email)
