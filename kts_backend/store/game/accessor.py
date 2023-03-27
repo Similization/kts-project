@@ -33,7 +33,7 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def player_model_list2player_list(
-        player_model_list: List[PlayerModel],
+            player_model_list: List[PlayerModel],
     ) -> List[Player]:
         """
         Convert list of PlayerModel objects to list of Player objects
@@ -47,8 +47,8 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def game_model2game(
-        game_model: GameModel,
-        player_list: Optional[List[Player] | List[PlayerModel]] = None,
+            game_model: GameModel,
+            player_list: Optional[List[Player] | List[PlayerModel]] = None,
     ) -> Game:
         """
         Convert GameModel object to Game
@@ -88,7 +88,7 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def game_data_model_list2game_data_list(
-        game_data_model_list: List[GameDataModel],
+            game_data_model_list: List[GameDataModel],
     ) -> List[GameData]:
         """
         Convert list of GameDataModel objects to list of GameData objects
@@ -121,7 +121,7 @@ class GameAccessor(BaseAccessor):
         return [player.__dict__ for player in player_list]
 
     async def get_player(
-        self, player_id: List[int] | int
+            self, player_id: List[int] | int
     ) -> List[Player] | Player:
         """
         Get player objects from database
@@ -173,7 +173,7 @@ class GameAccessor(BaseAccessor):
         )
 
     async def create_player(
-        self, player: List[Player] | Player
+            self, player: List[Player] | Player
     ) -> List[Player] | Player:
         """
         Create player objects in database
@@ -202,7 +202,7 @@ class GameAccessor(BaseAccessor):
             return self.player_model2player(player_model=player_model)
 
     async def create_player_list(
-        self, player_list: List[Player]
+            self, player_list: List[Player]
     ) -> List[Player]:
         """
         Create list of players in database
@@ -228,7 +228,7 @@ class GameAccessor(BaseAccessor):
             )
 
     async def update_player(
-        self, player: List[Player] | Player
+            self, player: List[Player] | Player
     ) -> List[Player] | Player:
         """
         Update player objects in database
@@ -257,7 +257,7 @@ class GameAccessor(BaseAccessor):
             return self.player_model2player(player_model=player_model)
 
     async def update_player_list(
-        self, player_list: List[Player]
+            self, player_list: List[Player]
     ) -> List[Player]:
         """
         pdate list of players in database
@@ -283,7 +283,7 @@ class GameAccessor(BaseAccessor):
             )
 
     async def delete_player(
-        self, player_id: List[int] | int
+            self, player_id: List[int] | int
     ) -> List[Player] | Player:
         """
         Delete player objects from database
@@ -311,7 +311,7 @@ class GameAccessor(BaseAccessor):
             return self.player_model2player(player_model=player_model)
 
     async def delete_player_list(
-        self, player_id_list: List[int]
+            self, player_id_list: List[int]
     ) -> List[Player]:
         """
         Create list of players in database
@@ -392,7 +392,7 @@ class GameAccessor(BaseAccessor):
         return self.game_model2game(game_model=game)
 
     async def create_game_with_players(
-        self, game_data_id: int, chat_id: int, player_list: List[Player]
+            self, game_data_id: int, chat_id: int, player_list: List[Player]
     ) -> Game:
         """
         Create Game object with players (Player objects)
@@ -479,46 +479,19 @@ class GameAccessor(BaseAccessor):
 
             return await self.get_game_by_date(created_at=game.created_at)
 
-    async def create_game_data(self, question: str, answer: str) -> GameData:
+    async def get_game_data(
+            self, game_data_id: int
+    ) -> GameData | None:
         """
-        Create new GameData object in database,
-        otherwise return the existed one
-        :param question: str
-        :param answer: str
-        :return: GameData
+        Get GameData object by game_data_id from database,
+        otherwise return None
+        :param game_data_id: int
+        :return: GameData | None
         """
-        statement = (
-            insert(GameDataModel)
-            .values(question=question, answer=answer)
-            .returning(GameDataModel)
-        )
         async with self.app.database.session.begin() as session:
-            res = await session.execute(statement=statement)
-            game_data_model: GameDataModel = res.scalar()
-
-            return self.game_data_model2game_data(
-                game_data_model=game_data_model
-            )
-
-    async def get_game_data_by_question(
-        self, question: str, answer: str
-    ) -> GameData:
-        """
-        Create new GameData object in database,
-        otherwise return the existed one
-        :param question: str
-        :param answer: str
-        :return: GameData
-        """
-        statement = (
-            insert(GameDataModel)
-            .values(question=question, answer=answer)
-            .returning(GameDataModel)
-        )
-        async with self.app.database.session.begin() as session:
-            res = await session.execute(statement=statement)
-            game_data_model: GameDataModel = res.scalar()
-
+            game_data_model: Optional[GameDataModel] = await session.get(GameDataModel, game_data_id)
+            if game_data_model is None:
+                return None
             return self.game_data_model2game_data(
                 game_data_model=game_data_model
             )
@@ -538,6 +511,27 @@ class GameAccessor(BaseAccessor):
 
             return self.game_data_model_list2game_data_list(
                 game_data_model_list=game_data_model_list
+            )
+
+    async def create_game_data(self, question: str, answer: str) -> GameData:
+        """
+        Create new GameData object in database,
+        otherwise return the existed one
+        :param question: str
+        :param answer: str
+        :return: GameData
+        """
+        statement = (
+            insert(GameDataModel)
+            .values(question=question, answer=answer)
+            .returning(GameDataModel)
+        )
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+            game_data_model: GameDataModel = res.scalar()
+
+            return self.game_data_model2game_data(
+                game_data_model=game_data_model
             )
 
     async def get_unfinished_game_list(self) -> List[Game] | None:
