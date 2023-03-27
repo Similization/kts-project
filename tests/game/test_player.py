@@ -39,6 +39,8 @@ class TestPlayerStore:
         assert player_from_db.in_game == player.in_game
         assert player_from_db.is_winner == player.is_winner
 
-    async def test_get_player_by_id(self, cli, store: Store, player_1: Player):
+    async def test_get_player_by_id(
+        self, cli, store: Store, user_1: User, player_1: Player
+    ):
         p = await store.game.get_player(player_id=player_1.player_id)
         assert player_1 == p
