@@ -18,7 +18,9 @@ class TestGameDataStore:
         question = "Who wants to be a billionaire?"
         answer = "Everyone"
 
-        created_game_data = await store.game.create_game_data(question=question, answer=answer)
+        created_game_data = await store.game.create_game_data(
+            question=question, answer=answer
+        )
         assert type(created_game_data) is GameData
 
         async with cli.app.database.session() as session:
@@ -36,25 +38,26 @@ class TestGameDataStore:
     ):
         with pytest.raises(IntegrityError) as exc_info:
             await store.game.create_game_data(
-                question=game_data_1.question,
-                answer=game_data_1.answer
+                question=game_data_1.question, answer=game_data_1.answer
             )
         assert exc_info.value.orig.pgcode == "23505"
 
     async def test_get_game_data_by_id(
-            self, cli, store: Store, game_data_1: GameData
+        self, cli, store: Store, game_data_1: GameData
     ):
-        assert game_data_1 == await store.game.get_game_data(game_data_id=game_data_1.game_data_id)
+        assert game_data_1 == await store.game.get_game_data(
+            game_data_id=game_data_1.game_data_id
+        )
 
     async def test_get_game_data_list_one(
-            self, cli, store: Store, game_data_1: GameData
+        self, cli, store: Store, game_data_1: GameData
     ):
         game_data_list = await store.game.get_game_data_list()
         assert len(game_data_list) == 1
         assert game_data_1 == game_data_list[0]
 
     async def test_get_game_data_list_many(
-            self, cli, store: Store, game_data_1: GameData, game_data_2: GameData
+        self, cli, store: Store, game_data_1: GameData, game_data_2: GameData
     ):
         game_data_list = await store.game.get_game_data_list()
         assert len(game_data_list) == 2
@@ -95,7 +98,7 @@ class TestGameDataAddView:
         assert data["data"]["answer"][0] == "Missing data for required field."
 
     async def test_existed_question(
-            self, cli, store: Store, game_data_1: GameData
+        self, cli, store: Store, game_data_1: GameData
     ):
         with pytest.raises(IntegrityError) as exc_info:
             await store.game.create_game_data(

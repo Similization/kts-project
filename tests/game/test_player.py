@@ -41,9 +41,7 @@ class TestPlayerStore:
         assert player_from_db.in_game == player.in_game
         assert player_from_db.is_winner == player.is_winner
 
-    async def test_create_player_with_no_user(
-        self, cli, store: Store
-    ):
+    async def test_create_player_with_no_user(self, cli, store: Store):
         player_id = 1
         user_id = 1
         score = 200
@@ -57,9 +55,7 @@ class TestPlayerStore:
             in_game=in_game,
         )
         with pytest.raises(IntegrityError) as exc_info:
-            await store.game.create_player(
-                player=player
-            )
+            await store.game.create_player(player=player)
             print()
         assert exc_info.value.orig.pgcode == "23503"
 
@@ -77,12 +73,12 @@ class TestPlayerStore:
             in_game=in_game,
         )
         with pytest.raises(IntegrityError) as exc_info:
-            await store.game.create_player(
-                player=player
-            )
+            await store.game.create_player(player=player)
         assert exc_info.value.orig.pgcode == "23505"
 
     async def test_get_player_by_id(
-            self, cli, store: Store, user_1: User, player_1: Player
+        self, cli, store: Store, user_1: User, player_1: Player
     ):
-        assert player_1 == await store.game.get_player(player_id=player_1.player_id)
+        assert player_1 == await store.game.get_player(
+            player_id=player_1.player_id
+        )
