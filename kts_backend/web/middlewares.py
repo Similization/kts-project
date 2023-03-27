@@ -9,7 +9,7 @@ from aiohttp.web_exceptions import (
     HTTPNotFound,
     HTTPNotImplemented,
     HTTPMethodNotAllowed,
-    HTTPConflict
+    HTTPConflict,
 )
 from aiohttp.web_middlewares import middleware
 from aiohttp_apispec import validation_middleware

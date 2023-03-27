@@ -39,7 +39,7 @@ class Database:
         )
         await self.app.store.admin.create_admin(
             email=self.app.config.admin.email,
-            password=self.app.config.admin.password
+            password=self.app.config.admin.password,
         )
 
     async def disconnect(self, *_: list, **__: dict) -> None:

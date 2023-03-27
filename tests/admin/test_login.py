@@ -21,11 +21,7 @@ class TestAdminLoginView:
         assert resp.status == 200
         data = await resp.json()
         assert data == ok_response(
-            {
-                "admin_id": 1,
-                "email": config.admin.email,
-                "user_id": None
-            }
+            {"admin_id": 1, "email": config.admin.email, "user_id": None}
         )
 
     async def test_missed_email(self, cli):

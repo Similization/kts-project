@@ -49,9 +49,11 @@ class AdminAccessor(BaseAccessor):
             return admin
 
         new_password = sha256(password.encode()).hexdigest()
-        statement = insert(AdminModel).values(
-            email=email, password=new_password
-        ).returning(AdminModel)
+        statement = (
+            insert(AdminModel)
+            .values(email=email, password=new_password)
+            .returning(AdminModel)
+        )
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
             admin_model: Optional[AdminModel] = res.scalar()

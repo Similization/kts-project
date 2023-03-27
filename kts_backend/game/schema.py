@@ -46,6 +46,7 @@ class GameSchema(Schema):
     chat_id = fields.Int(required=False)
     game_data_id = fields.Int(required=False)
     created_at = fields.DateTime(required=False)
+    finished_at = fields.DateTime(required=False)
 
 
 class GameWithPlayersSchema(GameSchema):
@@ -58,5 +59,9 @@ class GameDataByIdSchema(Schema):
 
 class GameDataSchema(Schema):
     game_data_id = fields.Int(required=False)
-    question = fields.Str(required=False)
-    answer = fields.Str(required=False)
+    question = fields.Str(required=True)
+    answer = fields.Str(required=True)
+
+
+class GameDataListSchema(Schema):
+    game_data_list = fields.Nested(GameDataSchema, many=True, required=False)

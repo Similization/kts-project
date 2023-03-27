@@ -2,7 +2,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import Integer, VARCHAR, Column, TIMESTAMP, ForeignKey, BOOLEAN
+from sqlalchemy import (
+    Integer,
+    VARCHAR,
+    Column,
+    TIMESTAMP,
+    ForeignKey,
+    BOOLEAN,
+    Null,
+)
 
 from kts_backend.store.database.sqlalchemy_base import db
 from kts_backend.user.model import User
@@ -29,9 +37,10 @@ class Game:
     game_id: int
     game_data_id: int
     created_at: datetime
+    finished_at: datetime
     chat_id: int
 
-    players: List[Player]
+    player_list: List[Player]
 
 
 @dataclass
@@ -54,9 +63,10 @@ class GameFull:
     game_id: int
     game_data: GameData
     created_at: datetime
+    finished_at: datetime
     chat_id: int
 
-    players: List[PlayerFull]
+    player_list: List[PlayerFull]
 
 
 @dataclass
@@ -96,7 +106,9 @@ class GameModel(db):
         nullable=False,
     )
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
+    finished_at = Column(TIMESTAMP, nullable=True, default=Null)
     chat_id = Column(Integer, nullable=False)
+    # required_player_count = Column(Integer, nullable=False, default=3)
 
 
 class PlayerGameModel(db):

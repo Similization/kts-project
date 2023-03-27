@@ -58,7 +58,7 @@ async def clear_db(server):
         connection = session.connection()
         table_list: FacadeDict = server.database._db.metadata.tables
         for table in table_list.values():
-            await session.execute(text(f"TRUNCATE \"{table}\" CASCADE"))
+            await session.execute(text(f'TRUNCATE "{table}" CASCADE'))
             await session.execute(
                 text(
                     f"ALTER SEQUENCE "

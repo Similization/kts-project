@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import select, update, delete, insert, func, and_
+from sqlalchemy import select, update, delete, insert, func
 
 from kts_backend.base.base_accessor import BaseAccessor
 from kts_backend.game.model import (
@@ -11,7 +11,6 @@ from kts_backend.game.model import (
     GameModel,
     GameData,
     GameDataModel,
-    PlayerGame,
     PlayerGameModel,
 )
 
@@ -48,25 +47,30 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def game_model2game(
-        game_model: GameModel, players: List[Player] | List[PlayerModel]
+        game_model: GameModel,
+        player_list: Optional[List[Player] | List[PlayerModel]] = None,
     ) -> Game:
         """
         Convert GameModel object to Game
         :param game_model: GameModel
-        :param players: List[Player] | List[PlayerModel]
+        :param player_list: List[Player] | List[PlayerModel]
         :return: Game
         """
-        if len(players) != 0 and type(players[0]) is PlayerModel:
-            players = GameAccessor.player_model_list2player_list(
-                player_model_list=players
+        if player_list is None:
+            player_list = []
+
+        if len(player_list) != 0 and type(player_list[0]) is PlayerModel:
+            player_list = GameAccessor.player_model_list2player_list(
+                player_model_list=player_list
             )
 
         return Game(
             game_id=game_model.game_id,
             game_data_id=game_model.game_data_id,
             created_at=game_model.created_at,
+            finished_at=game_model.finished_at,
             chat_id=game_model.chat_id,
-            players=players,
+            player_list=player_list,
         )
 
     @staticmethod
@@ -136,7 +140,9 @@ class GameAccessor(BaseAccessor):
         :return: Player
         """
         async with self.app.database.session.begin() as session:
-            player_model = await session.query(PlayerModel).get(player_id)
+            player_model: Optional[PlayerModel] = await session.get(
+                PlayerModel, player_id
+            )
 
             return self.player_model2player(player_model=player_model)
 
@@ -296,9 +302,9 @@ class GameAccessor(BaseAccessor):
         :return: Player
         """
         async with self.app.database.session.begin() as session:
-            player_model: Optional[PlayerModel] = await session.query(
-                PlayerModel
-            ).get(player_id)
+            player_model: Optional[PlayerModel] = await session.get(
+                PlayerModel, player_id
+            )
             if player_model:
                 await session.delete(player_model)
 
@@ -332,45 +338,97 @@ class GameAccessor(BaseAccessor):
             player_model_list=player_model_list
         )
 
-    async def get_game(self, game_id):
+    async def get_game(self, game_id: int) -> Game | None:
+        """
+        Get game object from database,
+        otherwise return None
+        :param game_id: int
+        :return: Game
+        """
         async with self.app.database.session.begin() as session:
-            game: Optional[GameModel] = await session.query(GameModel).get(
-                game_id
+            game_model: Optional[GameModel] = await session.get(
+                GameModel, game_id
             )
-
-        players = await self.get_players_from_game(game_id=game.game_id)
-        return self.game_model2game(game_model=game, players=players)
-
-    async def create_game(self, players: List[Player], chat_id: int) -> Game:
-        statement = (
-            insert(GameModel).values(chat_id=chat_id).returning(GameModel)
+            if game_model is None:
+                return None
+        player_list = await self.get_players_from_game(
+            game_id=game_model.game_id
         )
-        players_id = [{"vk_id": player.vk_id} for player in players]
+        return self.game_model2game(
+            game_model=game_model, player_list=player_list
+        )
+
+    async def get_game_by_date(self, created_at: datetime) -> Game | None:
+        """
+        Get game object from database by date column,
+        otherwise return None
+        :param created_at: datetime
+        :return: Game | None
+        """
+        statement = select(GameModel).filter_by(created_at=created_at)
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+            game: Optional[GameModel] = res.scalar()
+
+        player_list = await self.get_players_from_game(game_id=game.game_id)
+        return self.game_model2game(game_model=game, player_list=player_list)
+
+    async def create_game(self, game_data_id: int, chat_id: int) -> Game:
+        """
+        Create Game object without players
+        :param game_data_id: int
+        :param chat_id: int
+        :return: Game
+        """
+        statement = (
+            insert(GameModel)
+            .values(game_data_id=game_data_id, chat_id=chat_id)
+            .returning(GameModel)
+        )
 
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
             game: Optional[GameModel] = res.scalar()
-            # await session.commit()
+        return self.game_model2game(game_model=game)
 
-            query = insert(PlayerGameModel).values(
-                game_id=game.game_id
-            )  # .returning(PlayerGameScoreModel)
-            _ = await session.execute(query, players_id)
-            # _: Optional[List[PlayerGameScoreModel]] = res.scalars()
-            await session.commit()
-        return self.game_model2game(game_model=game, players=players)
+    async def create_game_with_players(
+        self, game_data_id: int, chat_id: int, player_list: List[Player]
+    ) -> Game:
+        """
+        Create Game object with players (Player objects)
+        :param game_data_id: int
+        :param chat_id: int
+        :param player_list: List[Player]
+        :return: Game
+        """
+        game: Game = await self.create_game(
+            game_data_id=game_data_id, chat_id=chat_id
+        )
+        created_player_list: List[Player] = await self.create_player_list(
+            player_list=player_list
+        )
+        game.player_list = created_player_list
 
-    async def get_game_by_date(self, created_at: datetime) -> Game | None:
-        query = select(GameModel).where(GameModel.created_at == created_at)
+        statement = insert(PlayerGameModel)
+
+        params = [
+            {"game_id": game.game_id, "player_id": player.player_id}
+            for player in created_player_list
+        ]
         async with self.app.database.session.begin() as session:
-            res = await session.execute(query)
+            res = await session.execute(statement, params)
             game: Optional[GameModel] = res.scalar()
 
-        players = await self.get_players_by_game_id(game_id=game.game_id)
-        return self.game_model2game(game_model=game, players=players)
+        return game
 
     async def get_players_by_chat_id(self, chat_id: int) -> List[Player] | None:
-        query = (
+        """
+        Get list of Player objects from database by chat_id,
+        otherwise return None
+        :param chat_id: int
+        :return: List[Player] | None
+        """
+        statement = (
             select(PlayerModel)
             .join(PlayerGameModel)
             .join(GameModel)
@@ -378,64 +436,152 @@ class GameAccessor(BaseAccessor):
         )
 
         async with self.app.database.session.begin() as session:
-            res = await session.execute(query)
-            players: Optional[List[PlayerModel]] = res.scalars()
+            res = await session.execute(statement=statement)
+            player_model_list: Optional[List[PlayerModel]] = res.scalars()
 
-            if players:
-                return self.player_model_list2player_list(
-                    player_model_list=players
-                )
-            return None
+            if player_model_list is None:
+                return None
+            return self.player_model_list2player_list(
+                player_model_list=player_model_list
+            )
 
-    async def get_players_from_game(self, game_id: int) -> List[Player] | List:
-        query = (
-            select(PlayerModel)
-            .join(PlayerGameModel)
-            .where(PlayerGameModel.game_id == game_id)
+    async def get_players_from_game(self, game_id: int) -> List[Player] | None:
+        """
+        Get list of player objects from database by game_id
+        :param game_id: int
+        :return: List[Player] | None
+        """
+        statement = (
+            select(PlayerModel).join(PlayerGameModel).filter_by(game_id=game_id)
         )
         async with self.app.database.session.begin() as session:
-            res = await session.execute(query)
-            players: Optional[List[PlayerModel]] = res.scalars()
+            res = await session.execute(statement=statement)
+            player_model_list: Optional[List[PlayerModel]] = res.scalars()
+            if player_model_list is None:
+                return None
+        return self.player_model_list2player_list(
+            player_model_list=player_model_list
+        )
 
-        return self.player_model_list2player_list(player_model_list=players)
-
-    async def get_last_game(self) -> Game | None:
-        subquery = select(func.max(GameModel.created_at))
-        query = select(GameModel).where(GameModel.created_at.in_(subquery))
+    async def get_last_game(self, chat_id: int) -> Game | None:
+        """
+        Get last Game object from database by chat_id
+        :return:
+        """
+        subquery = select(func.max(GameModel.created_at)).filter_by(
+            chat_id=chat_id
+        )
+        statement = select(GameModel).where(GameModel.created_at.in_(subquery))
 
         async with self.app.database.session.begin() as session:
-            res = await session.execute(query)
+            res = await session.execute(statement=statement)
             game: Optional[GameModel] = res.scalar()
 
             return await self.get_game_by_date(created_at=game.created_at)
 
+    async def create_game_data(self, question: str, answer: str) -> GameData:
+        """
+        Create new GameData object in database,
+        otherwise return the existed one
+        :param question: str
+        :param answer: str
+        :return: GameData
+        """
+        statement = (
+            insert(GameDataModel)
+            .values(question=question, answer=answer)
+            .returning(GameDataModel)
+        )
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+            game_data_model: GameDataModel = res.scalar()
+
+            return self.game_data_model2game_data(
+                game_data_model=game_data_model
+            )
+
+    async def get_game_data_by_question(
+        self, question: str, answer: str
+    ) -> GameData:
+        """
+        Create new GameData object in database,
+        otherwise return the existed one
+        :param question: str
+        :param answer: str
+        :return: GameData
+        """
+        statement = (
+            insert(GameDataModel)
+            .values(question=question, answer=answer)
+            .returning(GameDataModel)
+        )
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+            game_data_model: GameDataModel = res.scalar()
+
+            return self.game_data_model2game_data(
+                game_data_model=game_data_model
+            )
+
     async def get_game_data_list(self) -> List[GameData] | None:
-        query = select(GameDataModel)
+        """
+        Get list of all GameData objects from database,
+        otherwise return None
+        :return: List[GameData] | None
+        """
+
+        statement = select(GameDataModel)
 
         async with self.app.database.session.begin() as session:
-            res = await session.execute(query)
-            game_data_list: Optional[List[GameDataModel]] = res.scalars()
+            res = await session.execute(statement=statement)
+            game_data_model_list: Optional[List[GameDataModel]] = res.scalars()
 
             return self.game_data_model_list2game_data_list(
-                game_data_model_list=game_data_list
+                game_data_model_list=game_data_model_list
             )
 
-    async def set_game_winner(self, game_id, vk_id: int):
+    async def get_unfinished_game_list(self) -> List[Game] | None:
+        """
+        Get all unfinished games from database,
+        otherwise return None
+        :return: List[Game] | None
+        """
+        statement = select(GameModel).filter_by(finished_at=None)
+
         async with self.app.database.session.begin() as session:
-            _ = await (
-                session.query(PlayerGameModel)
-                .filter(
-                    PlayerGameModel.game_id == game_id,
-                    PlayerGameModel.vk_id == vk_id,
+            res = await session.execute(statement=statement)
+            game_model_list: Optional[List[GameModel]] = res.scalars()
+            if game_model_list is None:
+                return None
+
+            game_list = []
+            for game_model in game_model_list:
+                player_list = await self.get_players_from_game(
+                    game_id=game_model.g
                 )
-                .update({"is_winner": True})
-            )
-            _ = await (
-                session.query(PlayerGameModel)
-                .filter(
-                    PlayerGameModel.game_id == game_id,
-                    PlayerGameModel.vk_id != vk_id,
+                game_list.append(
+                    self.game_model2game(
+                        game_model=game_model, player_list=player_list
+                    )
                 )
-                .update({"is_winner": False})
-            )
-            await session.commit()
+            return game_list
+
+    # async def set_game_winner(self, game_id, vk_id: int):
+    #     async with self.app.database.session.begin() as session:
+    #         _ = await (
+    #             session.query(PlayerGameModel)
+    #             .filter(
+    #                 PlayerGameModel.game_id == game_id,
+    #                 PlayerGameModel.vk_id == vk_id,
+    #             )
+    #             .update({"is_winner": True})
+    #         )
+    #         _ = await (
+    #             session.query(PlayerGameModel)
+    #             .filter(
+    #                 PlayerGameModel.game_id == game_id,
+    #                 PlayerGameModel.vk_id != vk_id,
+    #             )
+    #             .update({"is_winner": False})
+    #         )
+    #         await session.commit()

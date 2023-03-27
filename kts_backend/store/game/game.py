@@ -1,6 +1,7 @@
+import asyncio
 import random
 from random import choice
-from typing import List, Set
+from typing import List, Set, Optional
 
 from kts_backend.game.model import Player, GameData
 from kts_backend.web.app import app
@@ -29,15 +30,18 @@ from kts_backend.web.app import app
 
 
 class PoleChudesGame:
-    def __init__(self, players: List[Player]):
-        self.players: List[Player] = players
+    def __init__(self, players: Optional[List[Player]] = None):
+        if players is None:
+            self.players: List[Player] = []
+        else:
+            self.players = players
         self.game: GameData = self.generate_game_data()
         self.guessed_word = "*" * len(self.game.answer)
         self.guessed_letters: Set[str] = set()
 
     @staticmethod
     def generate_game_data() -> GameData:
-        game_datas = await app.store.game.get_game_data_list()
+        game_datas = asyncio.run(app.store.game.get_game_data_list())
         return choice(seq=game_datas)
 
     def check_answer(self, answer: str) -> bool:
