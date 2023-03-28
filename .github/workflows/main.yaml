@@ -19,6 +19,6 @@ jobs:
       - name: set CONFIGPATH
         run: echo "CONFIGPATH=/home/runner/work/kts-project/kts-project/tests/config.yml" >> $GITHUB_ENV
 
-      - name: handle migrations
-        run: alembic upgrade head
+#      - name: handle migrations
+#        run: alembic upgrade head
           
