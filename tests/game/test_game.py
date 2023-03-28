@@ -16,8 +16,7 @@ class TestPlayerStore:
     async def test_create_game(self, cli, store: Store, game_data_1: GameData):
         chat_id: int = 1
         created_game = await store.game.create_game(
-            game_data_id=game_data_1.game_data_id,
-            chat_id=chat_id
+            game_data_id=game_data_1.game_data_id, chat_id=chat_id
         )
         assert type(created_game) is Game
 
@@ -38,14 +37,9 @@ class TestPlayerStore:
 
         with pytest.raises(IntegrityError) as exc_info:
             await store.game.create_game(
-                game_data_id=game_data_id,
-                chat_id=chat_id
+                game_data_id=game_data_id, chat_id=chat_id
             )
         assert exc_info.value.orig.pgcode == "23503"
 
-    async def test_get_game_by_id(
-            self, cli, store: Store, game_1: Game
-    ):
-        assert game_1 == await store.game.get_game(
-            game_id=game_1.game_id
-        )
+    async def test_get_game_by_id(self, cli, store: Store, game_1: Game):
+        assert game_1 == await store.game.get_game(game_id=game_1.game_id)

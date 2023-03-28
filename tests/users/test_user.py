@@ -24,7 +24,7 @@ class TestPlayerStore:
             vk_id=vk_id,
             name=name,
             last_name=last_name,
-            username=username
+            username=username,
         )
         created_user = await store.user.create_user(user=user.__dict__)
         assert type(created_user) is User
@@ -41,9 +41,7 @@ class TestPlayerStore:
         assert user_from_db.last_name == user.last_name
         assert user_from_db.username == user.username
 
-    async def test_create_existed_user(
-        self, cli, store: Store, user_1: User
-    ):
+    async def test_create_existed_user(self, cli, store: Store, user_1: User):
         user_id = 1
         vk_id = 100001
         name = "Dan"
@@ -54,15 +52,11 @@ class TestPlayerStore:
             vk_id=vk_id,
             name=name,
             last_name=last_name,
-            username=username
+            username=username,
         )
         with pytest.raises(IntegrityError) as exc_info:
             await store.user.create_user(user=user.__dict__)
         assert exc_info.value.orig.pgcode == "23505"
 
-    async def test_get_user_by_id(
-        self, cli, store: Store, user_1: User
-    ):
-        assert user_1 == await store.user.get_user(
-            user_id=user_1.user_id
-        )
+    async def test_get_user_by_id(self, cli, store: Store, user_1: User):
+        assert user_1 == await store.user.get_user(user_id=user_1.user_id)

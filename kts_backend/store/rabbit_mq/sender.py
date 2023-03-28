@@ -30,7 +30,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Interrupted')
+        print("Interrupted")
         try:
             sys.exit(0)
         except SystemExit:

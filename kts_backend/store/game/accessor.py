@@ -375,10 +375,7 @@ class GameAccessor(BaseAccessor):
         return self.game_model2game(game_model=game, player_list=player_list)
 
     async def create_game(
-            self,
-            game_data_id: int,
-            chat_id: int,
-            required_player_count: int = 3
+        self, game_data_id: int, chat_id: int, required_player_count: int = 3
     ) -> Game:
         """
         Create Game object without players
@@ -392,7 +389,7 @@ class GameAccessor(BaseAccessor):
             .values(
                 game_data_id=game_data_id,
                 chat_id=chat_id,
-                required_player_count=required_player_count
+                required_player_count=required_player_count,
             )
             .returning(GameModel)
         )
@@ -413,7 +410,9 @@ class GameAccessor(BaseAccessor):
         :return: Game
         """
         game: Game = await self.create_game(
-            game_data_id=game_data_id, chat_id=chat_id, required_player_count=len(player_list)
+            game_data_id=game_data_id,
+            chat_id=chat_id,
+            required_player_count=len(player_list),
         )
         created_player_list: List[Player] = await self.create_player_list(
             player_list=player_list
@@ -579,7 +578,11 @@ class GameAccessor(BaseAccessor):
         :param player_list: List[Player]
         :return: None
         """
-        player_id_list = [player.player_id for player in player_list if player.player_id != winner_id]
+        player_id_list = [
+            player.player_id
+            for player in player_list
+            if player.player_id != winner_id
+        ]
         statement = (
             update(PlayerModel)
             .filter_by(player_id=winner_id)

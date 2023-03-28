@@ -26,7 +26,6 @@ class Poller:
             await self.store.bots_manager.handle_updates(updates)
 
 
-
 # import asyncio
 # from asyncio import Task
 # from typing import Optional
@@ -53,4 +52,3 @@ class Poller:
 #         while self.is_running:
 #             updates = await self.store.vk_api.poll()
 #             self.queue.put_nowait(updates)
-

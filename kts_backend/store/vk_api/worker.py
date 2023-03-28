@@ -6,7 +6,9 @@ from kts_backend.store.vk_api.dataclasses import Update
 
 
 class Worker:
-    def __init__(self, store: Store, queue: asyncio.Queue, concurrent_workers: int):
+    def __init__(
+        self, store: Store, queue: asyncio.Queue, concurrent_workers: int
+    ):
         self.store = store
         self.queue = queue
         self.concurrent_workers = concurrent_workers

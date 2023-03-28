@@ -20,8 +20,20 @@ from kts_backend.user.model import UserModel, User
 def users(store) -> list[User]:
     return [
         User(user_id=1, vk_id=100, name="Dan", last_name="Ban", username="@db"),
-        User(user_id=2, vk_id=101, name="Yana", last_name="Ayan", username="@yanayan"),
-        User(user_id=3, vk_id=102, name="Daria", last_name="Torch", username="@Tor4D"),
+        User(
+            user_id=2,
+            vk_id=101,
+            name="Yana",
+            last_name="Ayan",
+            username="@yanayan",
+        ),
+        User(
+            user_id=3,
+            vk_id=102,
+            name="Daria",
+            last_name="Torch",
+            username="@Tor4D",
+        ),
     ]
 
 
@@ -195,10 +207,7 @@ async def game_1(db_session: AsyncSession, game_data_1: GameData) -> Game:
     game_data_id = game_data_1.game_data_id
     chat_id = 1
 
-    new_game = GameModel(
-        game_data_id=game_data_id,
-        chat_id=chat_id
-    )
+    new_game = GameModel(game_data_id=game_data_id, chat_id=chat_id)
 
     async with db_session.begin() as session:
         session.add(new_game)
@@ -215,7 +224,9 @@ async def game_1(db_session: AsyncSession, game_data_1: GameData) -> Game:
 
 
 @pytest.fixture
-async def game_2(db_session: AsyncSession, players: List[Player], game_data_2: GameData) -> Game:
+async def game_2(
+    db_session: AsyncSession, players: List[Player], game_data_2: GameData
+) -> Game:
     game_data_id = game_data_2.game_data_id
     created_at = datetime.datetime.strptime(
         "2023-02-22 12:45:00.000000",
@@ -223,9 +234,7 @@ async def game_2(db_session: AsyncSession, players: List[Player], game_data_2: G
     )
     chat_id = 1
     new_game = GameModel(
-        game_data_id=game_data_id,
-        created_at=created_at,
-        chat_id=chat_id
+        game_data_id=game_data_id, created_at=created_at, chat_id=chat_id
     )
 
     async with db_session.begin() as session:
@@ -253,14 +262,13 @@ async def game_2(db_session: AsyncSession, players: List[Player], game_data_2: G
 
 
 @pytest.fixture
-async def game_3(db_session: AsyncSession, players: List[Player], game_data_3: GameData) -> Game:
+async def game_3(
+    db_session: AsyncSession, players: List[Player], game_data_3: GameData
+) -> Game:
     game_data_id = game_data_3.game_data_id
     chat_id = 2
 
-    new_game = GameModel(
-        game_data_id=game_data_id,
-        chat_id=chat_id
-    )
+    new_game = GameModel(game_data_id=game_data_id, chat_id=chat_id)
 
     async with db_session.begin() as session:
         session.add(new_game)
