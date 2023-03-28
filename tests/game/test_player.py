@@ -31,10 +31,10 @@ class TestPlayerStore:
 
         async with cli.app.database.session() as session:
             res = await session.execute(select(PlayerModel))
-            players: List[PlayerModel] = res.scalars().all()
+            player_list: List[PlayerModel] = res.scalars().all()
 
-        assert len(players) == 1
-        player_from_db: PlayerModel = players[0]
+        assert len(player_list) == 1
+        player_from_db: PlayerModel = player_list[0]
         assert player_from_db.player_id == player.player_id
         assert player_from_db.user_id == player.user_id
         assert player_from_db.score == player.score

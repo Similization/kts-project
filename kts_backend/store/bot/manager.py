@@ -64,7 +64,6 @@ class BotManager:
             return None
 
         for update in updates:
-            await self.app.store.vk_api.get_chats()
             # if update.object.user_id == id_of_the_user_who_is_guessing_now:
             #     await self.check_answer(answer=update.object.body)
             await self.app.store.vk_api.send_message(

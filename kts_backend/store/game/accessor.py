@@ -70,6 +70,7 @@ class GameAccessor(BaseAccessor):
             created_at=game_model.created_at,
             finished_at=game_model.finished_at,
             chat_id=game_model.chat_id,
+            required_player_count=game_model.required_player_count,
             player_list=player_list,
         )
 
@@ -373,16 +374,26 @@ class GameAccessor(BaseAccessor):
         player_list = await self.get_players_from_game(game_id=game.game_id)
         return self.game_model2game(game_model=game, player_list=player_list)
 
-    async def create_game(self, game_data_id: int, chat_id: int) -> Game:
+    async def create_game(
+            self,
+            game_data_id: int,
+            chat_id: int,
+            required_player_count: int = 3
+    ) -> Game:
         """
         Create Game object without players
         :param game_data_id: int
         :param chat_id: int
+        :param required_player_count: int
         :return: Game
         """
         statement = (
             insert(GameModel)
-            .values(game_data_id=game_data_id, chat_id=chat_id)
+            .values(
+                game_data_id=game_data_id,
+                chat_id=chat_id,
+                required_player_count=required_player_count
+            )
             .returning(GameModel)
         )
 
@@ -402,7 +413,7 @@ class GameAccessor(BaseAccessor):
         :return: Game
         """
         game: Game = await self.create_game(
-            game_data_id=game_data_id, chat_id=chat_id
+            game_data_id=game_data_id, chat_id=chat_id, required_player_count=len(player_list)
         )
         created_player_list: List[Player] = await self.create_player_list(
             player_list=player_list
@@ -560,22 +571,31 @@ class GameAccessor(BaseAccessor):
                 )
             return game_list
 
-    # async def set_game_winner(self, game_id, vk_id: int):
-    #     async with self.app.database.session.begin() as session:
-    #         _ = await (
-    #             session.query(PlayerGameModel)
-    #             .filter(
-    #                 PlayerGameModel.game_id == game_id,
-    #                 PlayerGameModel.vk_id == vk_id,
-    #             )
-    #             .update({"is_winner": True})
-    #         )
-    #         _ = await (
-    #             session.query(PlayerGameModel)
-    #             .filter(
-    #                 PlayerGameModel.game_id == game_id,
-    #                 PlayerGameModel.vk_id != vk_id,
-    #             )
-    #             .update({"is_winner": False})
-    #         )
-    #         await session.commit()
+    async def set_game_winner(self, winner_id: int, player_list: List[Player]):
+        """
+        Update player table, set player column is_winner as True or False,
+        depending on whether the player's id is equal to winner_id
+        :param winner_id: int
+        :param player_list: List[Player]
+        :return: None
+        """
+        player_id_list = [player.player_id for player in player_list if player.player_id != winner_id]
+        statement = (
+            update(PlayerModel)
+            .filter_by(player_id=winner_id)
+            .values(is_winner=True)
+            .returning(PlayerModel)
+        )
+        async with self.app.database.session.begin() as session:
+            # update winner data
+            await session.execute(statement=statement)
+
+            # update all other players data
+            statement = (
+                update(PlayerModel)
+                .where(PlayerModel.player_id.in_(player_id_list))
+                .values(is_winner=False)
+            )
+            await session.execute(statement=statement)
+
+            await session.commit()

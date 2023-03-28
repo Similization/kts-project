@@ -47,6 +47,7 @@ class GameSchema(Schema):
     game_data_id = fields.Int(required=False)
     created_at = fields.DateTime(required=False)
     finished_at = fields.DateTime(required=False)
+    required_player_count = fields.Int(required=False)
 
 
 class GameWithPlayersSchema(GameSchema):

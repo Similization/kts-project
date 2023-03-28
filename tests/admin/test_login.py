@@ -1,5 +1,10 @@
 from kts_backend.store import Store
-from tests.utils import ok_response
+from tests.utils import ok_response, check_empty_table_exists
+
+
+class TestPlayerStore:
+    async def test_table_exists(self, cli):
+        await check_empty_table_exists(cli, "admin")
 
 
 class TestAdminLoginView:

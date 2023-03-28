@@ -9,7 +9,6 @@ from sqlalchemy import (
     TIMESTAMP,
     ForeignKey,
     BOOLEAN,
-    Null,
 )
 
 from kts_backend.store.database.sqlalchemy_base import db
@@ -39,6 +38,7 @@ class Game:
     created_at: datetime
     finished_at: datetime
     chat_id: int
+    required_player_count: int
 
     player_list: List[Player]
 
@@ -65,6 +65,7 @@ class GameFull:
     created_at: datetime
     finished_at: datetime
     chat_id: int
+    required_player_count: int
 
     player_list: List[PlayerFull]
 
@@ -106,9 +107,9 @@ class GameModel(db):
         nullable=False,
     )
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
-    finished_at = Column(TIMESTAMP, nullable=True, default=Null)
+    finished_at = Column(TIMESTAMP, nullable=True, default=None)
     chat_id = Column(Integer, nullable=False)
-    # required_player_count = Column(Integer, nullable=False, default=3)
+    required_player_count = Column(Integer, nullable=False, default=3)
 
 
 class PlayerGameModel(db):

@@ -1,8 +1,7 @@
 import json
 import random
 import typing
-from copy import deepcopy
-from typing import Optional, List, Literal
+from typing import Optional, List
 
 from aiohttp import TCPConnector
 from aiohttp.client import ClientSession
@@ -116,7 +115,7 @@ class VkApiAccessor(BaseAccessor):
             profiles = data["profiles"]
             return profiles
 
-    async def get_active_chats(self) -> List[dict]:
+    async def get_active_chat_id_list(self) -> List[dict]:
         async with self.session.get(
             self._build_query(
                 host=API_PATH,
@@ -140,16 +139,13 @@ class VkApiAccessor(BaseAccessor):
     async def send_message(
         self, message: Message, keyboard: Optional[dict] = None
     ) -> None:
-        keyboard = json.dumps(obj=keyboard, ensure_ascii=False).encode("utf-8")
-        keyboard = str(keyboard.decode("utf-8"))
         params = {
             "random_id": random.randint(1, 2**32),
             "message": message.text,
             "access_token": self.app.config.bot.token,
-            "keyboard": keyboard,
         }
         if keyboard:
-            params.update({"keyboard": keyboard})
+            params["keyboard"] = keyboard
         if int(message.peer_id) > 2000000000:
             params["chat_id"] = int(message.peer_id) - 2000000000
         else:
