@@ -1,6 +1,7 @@
-from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import List
+
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from sqlalchemy import (
     Integer,
@@ -9,118 +10,81 @@ from sqlalchemy import (
     TIMESTAMP,
     ForeignKey,
     BOOLEAN,
+    SmallInteger,
 )
 
 from kts_backend.store.database.sqlalchemy_base import db
-from kts_backend.user.model import User
-
-
-@dataclass
-class Player:
-    player_id: int
-    user_id: int
-    score: int
-    is_winner: Optional[bool]
-    in_game: bool
-
-
-@dataclass
-class GameData:
-    game_data_id: int
-    question: str
-    answer: str
-
-
-@dataclass
-class Game:
-    game_id: int
-    game_data_id: int
-    created_at: datetime
-    finished_at: datetime
-    chat_id: int
-    required_player_count: int
-
-    player_list: List[Player]
-
-
-@dataclass
-class PlayerGame:
-    player_game_id: int
-    player_id: int
-    game_id: int
-
-
-@dataclass
-class PlayerFull:
-    user: User
-    player_id: int
-    score: int
-    is_winner: bool
-
-
-@dataclass
-class GameFull:
-    game_id: int
-    game_data: GameData
-    created_at: datetime
-    finished_at: datetime
-    chat_id: int
-    required_player_count: int
-
-    player_list: List[PlayerFull]
-
-
-@dataclass
-class PlayerGameFull:
-    player_game_id: int
-    player: Player
-    game: Game
+from kts_backend.user.model import UserModel
 
 
 class PlayerModel(db):
     __tablename__ = "player"
 
-    player_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(
-        Integer, ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", use_alter=False, ondelete="CASCADE"),
+        nullable=False,
     )
+    user: Mapped["UserModel"] = relationship(
+        foreign_keys=[user_id], backref="player"
+    )
+
+    game_id: Mapped[int] = mapped_column(
+        ForeignKey("game.id", use_alter=False, ondelete="CASCADE"),
+        nullable=False,
+    )
+    game: Mapped["GameModel"] = relationship(
+        back_populates="player_list", foreign_keys=[game_id]
+    )
+
     score = Column(Integer, nullable=False, default=0)
-    is_winner = Column(BOOLEAN)
+    is_winner = Column(BOOLEAN, default=False, nullable=False)
     in_game = Column(BOOLEAN, default=True)
 
 
 class GameDataModel(db):
     __tablename__ = "game_data"
 
-    game_data_id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     question = Column(VARCHAR(90), nullable=False, unique=True)
-    answer = Column(VARCHAR(30), nullable=False, unique=True)
+    answer = Column(VARCHAR(30), nullable=False, unique=False)
 
 
 class GameModel(db):
     __tablename__ = "game"
 
-    game_id = Column(Integer, primary_key=True, autoincrement=True)
-    game_data_id = Column(
-        Integer,
-        ForeignKey("game_data.game_data_id", ondelete="CASCADE"),
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    game_data_id: Mapped[int] = mapped_column(
+        ForeignKey("game_data.id", use_alter=False, ondelete="SET NULL"),
         nullable=False,
     )
+    game_data: Mapped["GameDataModel"] = relationship(
+        cascade="all,delete", foreign_keys=[game_data_id], backref="data_game"
+    )
+
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     finished_at = Column(TIMESTAMP, nullable=True, default=None)
+
     chat_id = Column(Integer, nullable=False)
-    required_player_count = Column(Integer, nullable=False, default=3)
+    chat_message_id = Column(Integer, nullable=True, default=None)
 
+    guessed_word = Column(VARCHAR(30), nullable=False, default="")
+    required_player_count = Column(SmallInteger, nullable=False, default=3)
 
-class PlayerGameModel(db):
-    __tablename__ = "player_game_data"
-
-    player_game_id = Column(Integer, primary_key=True, autoincrement=True)
-    player_id = Column(
-        Integer,
-        ForeignKey("player.player_id", ondelete="CASCADE"),
-        nullable=False,
+    previous_player_id: Mapped[int] = mapped_column(
+        ForeignKey("player.id", use_alter=True, ondelete="SET NULL"),
+        nullable=True,
+        default=None,
     )
-    game_id = Column(
-        Integer, ForeignKey("game.game_id", ondelete="CASCADE"), nullable=False
+    previous_player: Mapped["PlayerModel"] = relationship(
+        backref="player_game",
+        foreign_keys=[previous_player_id],
+    )
+
+    player_list: Mapped[List["PlayerModel"]] = relationship(
+        back_populates="game",
+        cascade="all,delete",
+        primaryjoin="(GameModel.id==PlayerModel.game_id)",
     )

@@ -1,4 +1,3 @@
-import json
 import random
 import typing
 from typing import Optional, List
@@ -67,7 +66,7 @@ class VkApiAccessor(BaseAccessor):
             self.ts = data["ts"]
             self.logger.info(self.server)
 
-    async def poll(self):
+    async def poll(self) -> List[Update]:
         async with self.session.get(
             self._build_query(
                 host=self.server,
@@ -97,7 +96,7 @@ class VkApiAccessor(BaseAccessor):
                         ),
                     )
                 )
-            await self.app.store.bots_manager.handle_updates(updates)
+            return updates
 
     # get user from chat
     async def get_chat_users(self, chat_id: str):

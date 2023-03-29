@@ -5,7 +5,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from kts_backend.game.model import GameData, GameDataModel
+from kts_backend.game.dataclasses import GameData
+from kts_backend.game.model import GameDataModel
 from kts_backend.store import Store
 from tests.utils import ok_response, check_empty_table_exists
 
@@ -29,7 +30,7 @@ class TestGameDataStore:
 
         assert len(game_datas) == 1
         game_data_from_db: GameDataModel = game_datas[0]
-        assert game_data_from_db.game_data_id == 1
+        assert game_data_from_db.id == 1
         assert game_data_from_db.question == question
         assert game_data_from_db.answer == answer
 
@@ -46,7 +47,7 @@ class TestGameDataStore:
         self, cli, store: Store, game_data_1: GameData
     ):
         assert game_data_1 == await store.game.get_game_data(
-            game_data_id=game_data_1.game_data_id
+            game_data_id=game_data_1.id
         )
 
     async def test_get_game_data_list_one(
@@ -79,7 +80,7 @@ class TestGameDataAddView:
         data = await resp.json()
         assert data == ok_response(
             {
-                "game_data_id": 1,
+                "id": 1,
                 "question": "Who wants to be a billionaire?",
                 "answer": "Everyone",
             }

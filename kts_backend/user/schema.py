@@ -2,7 +2,7 @@ from marshmallow import Schema, fields
 
 
 class UserIdSchema(Schema):
-    user_id = fields.Int(required=True)
+    id = fields.Int(required=True)
 
 
 class UserIdListSchema(Schema):
@@ -25,7 +25,7 @@ class UserFullListCreateSchema(Schema):
 
 
 class UserUpdateSchema(Schema):
-    user_id = fields.Int(required=True)
+    id = fields.Int(required=True)
     vk_id = fields.Int(required=True)
     name = fields.Str(required=True)
     last_name = fields.Str(required=True)

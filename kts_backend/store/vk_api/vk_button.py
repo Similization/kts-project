@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from typing import Optional, Literal
 
 
+@dataclass(slots=True)
 class VkButton:
     def __init__(
         self,

@@ -1,5 +1,6 @@
 import json
 import typing
+from json import JSONDecodeError
 
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
@@ -10,12 +11,13 @@ from aiohttp.web_exceptions import (
     HTTPNotImplemented,
     HTTPMethodNotAllowed,
     HTTPConflict,
+    HTTPException,
 )
 from aiohttp.web_middlewares import middleware
 from aiohttp_apispec import validation_middleware
 from aiohttp_session import get_session
 
-from kts_backend.admin.model import Admin
+from kts_backend.admin.dataclasses import Admin
 from kts_backend.web.util import error_json_response
 
 if typing.TYPE_CHECKING:
@@ -26,7 +28,7 @@ if typing.TYPE_CHECKING:
 async def auth_middleware(request: "Request", handler: callable):
     session = await get_session(request)
     if session:
-        request.admin = Admin.from_session(session)
+        request.admin = Admin.from_session(session=session.__dict__)
     return await handler(request)
 
 
@@ -49,7 +51,7 @@ async def error_handling_middleware(request: "Request", handler):
     except (HTTPBadRequest, HTTPUnprocessableEntity) as e:
         try:
             data = json.loads(e.text)
-        except Exception:
+        except JSONDecodeError | TypeError:
             data = e.text
 
         return error_json_response(
@@ -90,6 +92,13 @@ async def error_handling_middleware(request: "Request", handler):
         return error_json_response(
             http_status=409,
             status=HTTP_ERROR_CODES[409],
+            message=e.reason,
+            data=e.text,
+        )
+    except HTTPException as e:
+        return error_json_response(
+            http_status=500,
+            status=HTTP_ERROR_CODES[500],
             message=e.reason,
             data=e.text,
         )

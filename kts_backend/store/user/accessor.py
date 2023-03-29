@@ -1,10 +1,11 @@
-from typing import Optional, List
+from dataclasses import asdict
+from typing import List, Sequence
 
 from sqlalchemy import select, update, insert, delete
-from sqlalchemy.exc import SQLAlchemyError
 
 from kts_backend.base.base_accessor import BaseAccessor
-from kts_backend.user.model import User, UserModel
+from kts_backend.user.dataclasses import User
+from kts_backend.user.model import UserModel
 
 
 class UserError(Exception):
@@ -20,7 +21,7 @@ class UserAccessor(BaseAccessor):
         :return: User
         """
         return User(
-            user_id=user_model.user_id,
+            id=user_model.id,
             vk_id=user_model.vk_id,
             name=user_model.name,
             last_name=user_model.last_name,
@@ -48,7 +49,7 @@ class UserAccessor(BaseAccessor):
         :param user: List[UserModel]
         :return: dict
         """
-        return user.__dict__
+        return asdict(user)
 
     @staticmethod
     def user_list2dict_list(user_list: List[User]) -> List[dict]:
@@ -57,7 +58,7 @@ class UserAccessor(BaseAccessor):
         :param user_list: List[User]
         :return: List[dict]
         """
-        return [user.__dict__ for user in user_list]
+        return [asdict(user) for user in user_list]
 
     async def get_user(
         self, user_id: List[int] | int
@@ -67,9 +68,9 @@ class UserAccessor(BaseAccessor):
         :param user_id: List[int] | int
         :return: List[User] | User | None
         """
-        if type(user_id) is int:
+        if isinstance(user_id, int):
             return await self.get_one_user(user_id=user_id)
-        if type(user_id) is list:
+        if isinstance(user_id, list):
             return await self.get_user_list(user_id_list=user_id)
 
     async def get_one_user(self, user_id: int) -> User | None:
@@ -79,9 +80,7 @@ class UserAccessor(BaseAccessor):
         :return: User | None
         """
         async with self.app.database.session.begin() as session:
-            user_model: Optional[UserModel] = await session.get(
-                UserModel, user_id
-            )
+            user_model: UserModel | None = await session.get(UserModel, user_id)
             if user_model:
                 return self.user_model2user(user_model=user_model)
             return None
@@ -98,10 +97,11 @@ class UserAccessor(BaseAccessor):
         #     result_list.append(await self.get_one_user(user_id=user_id))
         # return result_list
         # TODO: var 2
-        statement = select(UserModel).where(UserModel.user_id.in_(user_id_list))
+        statement = select(UserModel).where(UserModel.id.in_(user_id_list))
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement)
-            user_model_list: Optional[List[UserModel]] = res.scalars()
+            user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+            user_model_list: List[UserModel] | None = list(user_model_seq)
             if user_model_list:
                 return self.user_model_list2user_list(
                     user_model_list=user_model_list
@@ -117,7 +117,7 @@ class UserAccessor(BaseAccessor):
         statement = select(UserModel).filter_by(vk_id=vk_id)
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            user_model: Optional[UserModel] = res.scalar()
+            user_model: UserModel | None = res.scalar()
             if user_model:
                 return self.user_model2user(user_model=user_model)
             return None
@@ -129,9 +129,9 @@ class UserAccessor(BaseAccessor):
         :param user: List[dict] | dict
         :return: List[User] | User
         """
-        if type(user) is dict:
+        if isinstance(user, dict):
             return await self.create_one_user(user=user)
-        if type(user) is list:
+        if isinstance(user, list):
             return await self.create_user_list(user_list=user)
 
     async def create_one_user(self, user: dict) -> User:
@@ -148,7 +148,7 @@ class UserAccessor(BaseAccessor):
             res = await session.execute(
                 insert(UserModel).returning(UserModel), user
             )
-            user_model: Optional[UserModel] = res.scalar()
+            user_model: UserModel | None = res.scalar()
             await session.commit()
 
             return self.user_model2user(user_model=user_model)
@@ -170,7 +170,8 @@ class UserAccessor(BaseAccessor):
             res = await session.execute(
                 insert(UserModel).returning(UserModel), user_list
             )
-            user_model_list: Optional[List[UserModel]] = res.scalars()
+            user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+            user_model_list: List[UserModel] | None = list(user_model_seq)
             await session.commit()
 
             return self.user_model_list2user_list(
@@ -184,9 +185,9 @@ class UserAccessor(BaseAccessor):
         :param user: List[dict] | dict
         :return: List[User] | User
         """
-        if type(user) is dict:
+        if isinstance(user, dict):
             return await self.update_one_user(user=user)
-        if type(user) is list:
+        if isinstance(user, list):
             return await self.update_user_list(user_list=user)
 
     async def update_one_user(self, user: dict) -> User:
@@ -203,12 +204,10 @@ class UserAccessor(BaseAccessor):
 
         async with self.app.database.session.begin() as session:
             res = await session.execute(
-                update(UserModel)
-                .where(UserModel.user_id == user_id)
-                .returning(UserModel),
+                update(UserModel).filter_by(id=user_id).returning(UserModel),
                 user,
             )
-            user_model: Optional[UserModel] = res.scalar()
+            user_model: UserModel | None = res.scalar()
             await session.commit()
 
             return self.user_model2user(user_model=user_model)
@@ -257,12 +256,12 @@ class UserAccessor(BaseAccessor):
         # except UserError:
         #     return await self.update_user(user=user)
         # TODO: var 2
-        if type(user) is User:
+        if isinstance(user, dict):
             try:
                 return await self.create_one_user(user=user)
             except UserError:
                 return await self.update_one_user(user=user)
-        if type(user) is list:
+        if isinstance(user, list):
             for user_one in user:
                 try:
                     return await self.create_one_user(user=user_one)
@@ -275,9 +274,9 @@ class UserAccessor(BaseAccessor):
         :param user_id:
         :return:
         """
-        if type(user_id) is int:
+        if isinstance(user_id, int):
             return await self.delete_one_user(user_id=user_id)
-        if type(user_id) is list:
+        if isinstance(user_id, list):
             return await self.delete_user_list(user_id_list=user_id)
 
     async def delete_one_user(self, user_id: int) -> User:
@@ -287,9 +286,7 @@ class UserAccessor(BaseAccessor):
         :return: User
         """
         async with self.app.database.session.begin() as session:
-            user_model: Optional[UserModel] = await session.get(
-                UserModel, user_id
-            )
+            user_model: UserModel | None = await session.get(UserModel, user_id)
             if user_model:
                 await session.delete(user_model)
             await session.commit()
@@ -310,12 +307,13 @@ class UserAccessor(BaseAccessor):
         # TODO: var 2
         statement = (
             delete(UserModel)
-            .where(UserModel.user_id.in_(user_id_list))
+            .where(UserModel.id.in_(user_id_list))
             .returning(UserModel)
         )
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            user_model_list: Optional[List[UserModel]] = res.scalars()
+            user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+            user_model_list: List[UserModel] | None = list(user_model_seq)
             await session.commit()
 
             return self.user_model_list2user_list(

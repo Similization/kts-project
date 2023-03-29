@@ -10,7 +10,8 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.util._collections import FacadeDict
 
-from kts_backend.admin.model import AdminModel, Admin
+from kts_backend.admin.dataclasses import Admin
+from kts_backend.admin.model import AdminModel
 from kts_backend.store import Database
 from kts_backend.store import Store
 from kts_backend.web.app import setup_app
@@ -105,4 +106,4 @@ async def admin(cli, db_session, config: Config) -> Admin:
     async with db_session.begin() as session:
         session.add(new_admin)
 
-    return Admin(admin_id=new_admin.admin_id, email=new_admin.email)
+    return Admin(id=new_admin.id, email=new_admin.email)

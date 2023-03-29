@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import List
 
 from kts_backend.store.vk_api.vk_button import (
@@ -10,6 +11,7 @@ from kts_backend.store.vk_api.vk_button import (
 )
 
 
+@dataclass(slots=True)
 class VkKeyboard:
     def __init__(
         self,

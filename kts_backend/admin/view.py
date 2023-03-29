@@ -4,7 +4,7 @@ from aiohttp.web import HTTPForbidden, HTTPUnauthorized
 from aiohttp_apispec import request_schema, response_schema
 from aiohttp_session import new_session
 
-from kts_backend.admin.model import Admin
+from kts_backend.admin.dataclasses import Admin
 from kts_backend.admin.schema import AdminSchema
 from kts_backend.web.app import View
 from kts_backend.web.util import json_response
@@ -16,14 +16,13 @@ class AdminLoginView(View):
     async def post(self):
         data: dict = self.request["data"]
         admin: Optional[Admin] = await self.store.admin.get_admin_by_email(
-            email=data.get("email")
+            email=data["email"]
         )
-        # check conditions
         if admin is None or not admin.is_password_valid(data["password"]):
             raise HTTPForbidden
 
         session = await new_session(request=self.request)
-        session["admin"] = {"id": admin.admin_id, "email": admin.email}
+        session["admin"] = {"id": admin.id, "email": admin.email}
 
         return json_response(data=AdminSchema().dump(admin))
 

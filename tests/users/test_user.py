@@ -5,7 +5,8 @@ from sqlalchemy.future import select
 
 import pytest
 from kts_backend.store import Store
-from kts_backend.user.model import User, UserModel
+from kts_backend.user.dataclasses import User
+from kts_backend.user.model import UserModel
 from tests.utils import check_empty_table_exists
 
 
@@ -20,7 +21,7 @@ class TestPlayerStore:
         last_name = "Ban"
         username = "@db"
         user = User(
-            user_id=user_id,
+            id=user_id,
             vk_id=vk_id,
             name=name,
             last_name=last_name,
@@ -35,7 +36,7 @@ class TestPlayerStore:
 
         assert len(user_model_list) == 1
         user_from_db: UserModel = user_model_list[0]
-        assert user_from_db.user_id == user.user_id
+        assert user_from_db.id == user.id
         assert user_from_db.vk_id == user.vk_id
         assert user_from_db.name == user.name
         assert user_from_db.last_name == user.last_name
@@ -48,7 +49,7 @@ class TestPlayerStore:
         last_name = "Ban"
         username = "@db"
         user = User(
-            user_id=user_id,
+            id=user_id,
             vk_id=vk_id,
             name=name,
             last_name=last_name,
@@ -59,4 +60,4 @@ class TestPlayerStore:
         assert exc_info.value.orig.pgcode == "23505"
 
     async def test_get_user_by_id(self, cli, store: Store, user_1: User):
-        assert user_1 == await store.user.get_user(user_id=user_1.user_id)
+        assert user_1 == await store.user.get_user(user_id=user_1.id)

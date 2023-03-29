@@ -1,9 +1,10 @@
-from typing import Optional
+from dataclasses import asdict
 from hashlib import sha256
 
 from sqlalchemy import insert, select
 
-from kts_backend.admin.model import Admin, AdminModel
+from kts_backend.admin.dataclasses import Admin
+from kts_backend.admin.model import AdminModel
 from kts_backend.base.base_accessor import BaseAccessor
 
 
@@ -16,10 +17,19 @@ class AdminAccessor(BaseAccessor):
         :return: Admin
         """
         return Admin(
-            admin_id=admin_model.admin_id,
+            id=admin_model.id,
             email=admin_model.email,
             password=admin_model.password,
         )
+
+    @staticmethod
+    def admin2dict(admin: Admin) -> dict:
+        """
+        Convert AdminModel object to dict object
+        :param admin: Admin
+        :return: dict
+        """
+        return asdict(admin)
 
     async def get_admin_by_email(self, email: str) -> Admin | None:
         """
@@ -30,7 +40,7 @@ class AdminAccessor(BaseAccessor):
         statement = select(AdminModel).filter_by(email=email)
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            admin_model: Optional[AdminModel] = res.scalar()
+            admin_model: AdminModel | None = res.scalar()
 
             if admin_model:
                 return self.admin_model2admin(admin_model=admin_model)
@@ -44,7 +54,7 @@ class AdminAccessor(BaseAccessor):
         :param password: str
         :return: Admin
         """
-        admin: Optional[Admin] = await self.get_admin_by_email(email=email)
+        admin: Admin | None = await self.get_admin_by_email(email=email)
         if admin is not None:
             return admin
 
@@ -56,12 +66,14 @@ class AdminAccessor(BaseAccessor):
         )
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            admin_model: Optional[AdminModel] = res.scalar()
+            admin_model: AdminModel | None = res.scalar()
             await session.commit()
         return self.admin_model2admin(admin_model=admin_model)
 
-    async def update_admin(self, admin: Admin) -> Admin:
+    async def update_admin(self):
+        raise NotImplementedError
         pass
 
-    async def delete_admin(self, admin_id: int) -> Admin:
+    async def delete_admin(self):
+        raise NotImplementedError
         pass

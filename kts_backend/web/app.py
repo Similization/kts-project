@@ -11,7 +11,7 @@ from aiohttp_session import setup as session_setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from aiohttp_apispec import setup_aiohttp_apispec
 
-from kts_backend.admin.model import Admin
+from kts_backend.admin.dataclasses import Admin
 from kts_backend.store import setup_store, Store
 from kts_backend.store.database.database import Database
 from kts_backend.web.config import setup_config, Config
@@ -19,9 +19,6 @@ from kts_backend.web.logger import setup_logging
 from kts_backend.web.middlewares import setup_middlewares
 from kts_backend.web.route import setup_routes
 from kts_backend.web.urls import register_urls
-
-
-# __all__ = ("ApiApplication",)
 
 
 class Application(AiohttpApplication):

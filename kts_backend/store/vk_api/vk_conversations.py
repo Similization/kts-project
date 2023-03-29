@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from typing import Literal
 
 
+@dataclass(slots=True)
 class VkConversation:
     def __init__(
         self,

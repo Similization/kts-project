@@ -13,7 +13,7 @@ class TestAdminLoginView:
         assert admin is not None
         assert admin.email == config.admin.email
         assert admin.password != config.admin.password
-        assert admin.admin_id == 1
+        assert admin.id == 1
 
     async def test_success(self, cli, config):
         resp = await cli.post(
@@ -26,7 +26,7 @@ class TestAdminLoginView:
         assert resp.status == 200
         data = await resp.json()
         assert data == ok_response(
-            {"admin_id": 1, "email": config.admin.email, "user_id": None}
+            {"id": 1, "email": config.admin.email, "user_id": None}
         )
 
     async def test_missed_email(self, cli):
