@@ -15,7 +15,7 @@ from kts_backend.web.util import json_response
 
 class GameDataAddView(View):
     @request_schema(GameDataSchema)
-    @response_schema(GameDataSchema)
+    @response_schema(GameDataSchema, 200)
     async def post(self):
         """
         Create new GameData object in database with question and answer fields
@@ -30,7 +30,7 @@ class GameDataAddView(View):
 
 
 class GameDataListGetView(View):
-    @response_schema(GameDataListSchema)
+    @response_schema(GameDataListSchema, 200)
     async def get(self):
         """
         Get list of GameData object from database

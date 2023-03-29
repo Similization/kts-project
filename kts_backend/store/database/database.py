@@ -17,12 +17,22 @@ if TYPE_CHECKING:
 
 class Database:
     def __init__(self, app: "Application"):
+        """
+        Initialize new Database object, using app
+        :param app: Application
+        """
         self.app: Application = app
         self._engine: Optional[AsyncEngine] = None
         self._db: Optional[declarative_base] = None
         self.session: Optional[async_sessionmaker] = None
 
     async def connect(self, *_: list, **__: dict) -> None:
+        """
+        Create new connection to database, from self.app.config.database
+        :param _: list
+        :param __: dict
+        :return: None
+        """
         self._db = db
         database = self.app.config.database
         url = URL.create(
@@ -37,11 +47,18 @@ class Database:
         self.session = async_sessionmaker(
             bind=self._engine, expire_on_commit=False, class_=AsyncSession
         )
+        # TODO: disabled for tests/enabled for run
         # await self.app.store.admin.create_admin(
         #     email=self.app.config.admin.email,
         #     password=self.app.config.admin.password,
         # )
 
     async def disconnect(self, *_: list, **__: dict) -> None:
+        """
+        Close connection with database
+        :param _: list
+        :param __: dict
+        :return: None
+        """
         if self._engine is not None:
             await self._engine.dispose()

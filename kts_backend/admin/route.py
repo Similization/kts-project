@@ -5,6 +5,11 @@ if typing.TYPE_CHECKING:
 
 
 def setup_routes(app: "Application"):
+    """
+    Setup routes /admin route.<method> for application
+    :param app: Application
+    :return: None
+    """
     from kts_backend.admin.view import AdminLoginView
     from kts_backend.admin.view import AdminCurrentView
 

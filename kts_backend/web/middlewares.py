@@ -95,14 +95,7 @@ async def error_handling_middleware(request: "Request", handler):
             message=e.reason,
             data=e.text,
         )
-    except HTTPException as e:
-        return error_json_response(
-            http_status=500,
-            status=HTTP_ERROR_CODES[500],
-            message=e.reason,
-            data=e.text,
-        )
-    except Exception as e:
+    except Exception | HTTPException as e:
         print(e)
         return error_json_response(
             http_status=500,

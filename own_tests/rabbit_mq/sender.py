@@ -4,7 +4,7 @@ import sys
 
 from aio_pika import connect
 
-from kts_backend.store.rabbit_mq.callback import on_message
+from own_tests.rabbit_mq.callback import on_message
 
 queue_name = "manager_sender"
 

@@ -1,24 +1,24 @@
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(slots=True)
 class SessionConfig:
     key: str
 
 
-@dataclass
+@dataclass(slots=True)
 class AdminConfig:
     email: str
     password: str
 
 
-@dataclass
+@dataclass(slots=True)
 class BotConfig:
     token: str
     group_id: int
 
 
-@dataclass
+@dataclass(slots=True)
 class DatabaseConfig:
     host: str
     port: int
@@ -27,7 +27,7 @@ class DatabaseConfig:
     database: str
 
 
-@dataclass
+@dataclass(slots=True)
 class Config:
     admin: AdminConfig = None
     bot: BotConfig = None
