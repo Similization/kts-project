@@ -12,7 +12,13 @@ if typing.TYPE_CHECKING:
     from kts_backend.web.app import Application
 
 
-def setup_config(app: "Application", config: dict):
+def setup_config(app: "Application", config: dict) -> None:
+    """
+    Setup application configuration
+    :param app: Application
+    :param config: dict
+    :return: None
+    """
     app.config = Config(
         admin=AdminConfig(
             email=config["admin"]["email"],

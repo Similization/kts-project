@@ -12,12 +12,20 @@ if typing.TYPE_CHECKING:
 
 class BotManager:
     def __init__(self, app: "Application"):
+        """
+        Initialize BotManager object, using app
+        :param app: Application
+        """
         self.app = app
         self.bot = None
         self.game_list: List[PoleChuDesGame] = []
         self.logger = getLogger("handler")
 
-    async def start(self):
+    async def start(self) -> None:
+        """
+        Get all unfinished games and create PoleChuDes objects for each entity
+        :return: None
+        """
         # получаем все активные игры
         game_list: List[
             GameFull
@@ -35,6 +43,11 @@ class BotManager:
                 )
 
     async def get_game_by_chat_id(self, chat_id: int) -> PoleChuDesGame | None:
+        """
+        Get game from self.game_list by chat_id
+        :param chat_id: int
+        :return: PoleChuDesGame | None
+        """
         for game in self.game_list:
             if game.game.chat_id == chat_id:
                 return game
@@ -43,18 +56,23 @@ class BotManager:
     async def handle_updates(
         self, updates: list[Update] | Update | None = None
     ) -> None:
+        """
+        Handle updates
+        :param updates: list[Update] | Update | None
+        :return: None
+        """
         if updates is None:
             return None
         if isinstance(updates, Update):
             updates = [updates]
 
         for update in updates:
-            game: PoleChuDesGame = await self.get_game_by_chat_id(
-                chat_id=int(update.object.peer_id)
-            )
-            await game.check_guess(
-                vk_id=update.object.user_id, guess=update.object.body
-            )
+            # game: PoleChuDesGame = await self.get_game_by_chat_id(
+            #     chat_id=int(update.object.peer_id)
+            # )
+            # await game.check_guess(
+            #     vk_id=update.object.user_id, guess=update.object.body
+            # )
             # обновляем данные об игре в базе данных
             # обновляем сообщение с последними результатами
             await self.app.store.vk_api.send_message(

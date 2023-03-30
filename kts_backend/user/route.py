@@ -12,6 +12,11 @@ from kts_backend.web.app import Application
 
 
 def setup_routes(app: Application):
+    """
+    Setup routes /user route.<method> for application
+    :param app: Application
+    :return: None
+    """
     app.router.add_view(path="/user.get", handler=UserGetView)
     app.router.add_view(path="/user.create", handler=UserCreateView)
     app.router.add_view(path="/user.update", handler=UserUpdateView)

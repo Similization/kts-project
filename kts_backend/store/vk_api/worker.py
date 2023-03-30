@@ -18,24 +18,24 @@ from kts_backend.store.vk_api.poller import QUEUE_NAME
 class Worker:
     def __init__(self, store: Store, concurrent_workers: int):
         self.store = store
-        self.connection: AbstractConnection = await connect(
-            "amqp://guest:guest@localhost/"
-        )
+        self.connection: AbstractConnection | None = None
         self.channel: AbstractChannel | None = None
         self.queue: AbstractQueue | None = None
         self.concurrent_workers = concurrent_workers
         self._tasks: List[asyncio.Task] = []
 
     async def start(self):
-        self.channel: AbstractChannel = await self.connection.channel()
-        self.queue: AbstractQueue = await self.channel.declare_queue(
-            name=QUEUE_NAME
-        )
-        self._tasks = [
-            asyncio.create_task(self._worker())
-            for _ in range(self.concurrent_workers)
-        ]
-        await asyncio.Future()
+        self.connection = await connect("amqp://guest:guest@localhost/")
+        async with self.connection:
+            self.channel: AbstractChannel = await self.connection.channel()
+            self.queue: AbstractQueue = await self.channel.declare_queue(
+                name=QUEUE_NAME
+            )
+            self._tasks = [
+                asyncio.create_task(self._worker())
+                for _ in range(self.concurrent_workers)
+            ]
+            await asyncio.Future()
 
     async def callback(self, message: AbstractIncomingMessage) -> None:
         body_to_dict = json.loads(message.body)
@@ -47,6 +47,7 @@ class Worker:
             body=update_object_dict["body"],
         )
         update = Update(type=body_to_dict["type"], object=update_object)
+        await asyncio.sleep(1)
         await self.handle_update(updates=update)
 
     async def handle_update(self, updates: list[Update] | Update | None):
@@ -54,8 +55,12 @@ class Worker:
 
     async def _worker(self):
         while True:
-            await self.queue.consume(callback=self.callback, no_ack=True)
+            try:
+                await self.queue.consume(callback=self.callback, no_ack=True)
+            finally:
+                await self.queue.cancel(consumer_tag="")
 
     async def stop(self):
-        for t in self._tasks:
-            t.cancel()
+        for task in self._tasks:
+            await task
+        await self.connection.close()

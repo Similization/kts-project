@@ -8,6 +8,7 @@ from aiohttp.client import ClientSession
 from kts_backend.base.base_accessor import BaseAccessor
 from kts_backend.store.vk_api.dataclasses import Message, Update, UpdateObject
 from kts_backend.store.vk_api.poller import Poller
+from kts_backend.store.vk_api.worker import Worker
 
 if typing.TYPE_CHECKING:
     from kts_backend.web.app import Application
@@ -18,11 +19,12 @@ API_PATH = "https://api.vk.com/method/"
 class VkApiAccessor(BaseAccessor):
     def __init__(self, app: "Application", *args, **kwargs):
         super().__init__(app, *args, **kwargs)
-        self.session: Optional[ClientSession] = None
-        self.key: Optional[str] = None
-        self.server: Optional[str] = None
-        self.poller: Optional[Poller] = None
-        self.ts: Optional[int] = None
+        self.session: ClientSession | None = None
+        self.key: str | None = None
+        self.server: str | None = None
+        self.poller: Poller | None = None
+        self.worker: Worker | None = None
+        self.ts: int | None = None
 
     async def connect(self, app: "Application"):
         self.session = ClientSession(connector=TCPConnector(verify_ssl=False))
@@ -30,9 +32,13 @@ class VkApiAccessor(BaseAccessor):
             await self._get_long_poll_service()
         except Exception as e:
             self.logger.error("Exception", exc_info=e)
-        self.poller = Poller(app.store)
+        self.poller = Poller(store=app.store)
+        self.worker = Worker(store=app.store, concurrent_workers=4)
+
         self.logger.info("start polling")
         await self.poller.start()
+        self.logger.info("start workers")
+        await self.worker.start()
 
     async def disconnect(self, app: "Application"):
         if self.poller:

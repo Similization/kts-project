@@ -19,11 +19,21 @@ class VkKeyboard:
         one_time: bool = False,
         inline: bool = False,
     ):
+        """
+        Initialize VkKeyboard object, using:
+        :param buttons: List[List[VkButton]]
+        :param one_time: bool
+        :param inline: bool
+        """
         self.one_time: bool = one_time
         self.inline: bool = inline
         self.buttons: List[List[VkButton]] = buttons
 
-    def convert_to_string(self):
+    def convert_to_string(self) -> str:
+        """
+        Convert VkKeyboard object to str, used in vk
+        :return: str
+        """
         keyboard: dict = deepcopy(self.__dict__)
         keyboard_buttons: List = []
         for button_list in self.buttons[:]:

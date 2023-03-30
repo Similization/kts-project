@@ -28,28 +28,48 @@ class Application(AiohttpApplication):
 
 
 class Request(AiohttpRequest):
-    admin: Optional[Admin] = None
+    admin: Admin | None = None
 
     @property
     def app(self) -> Application:
+        """
+        Return application
+        :return: Application
+        """
         return super().app()
 
 
 class View(AiohttpView):
     @property
-    def request(self) -> Request:
+    def request(self) -> Request | None:
+        """
+        Return request
+        :return: Request | None
+        """
         return super().request
 
     @property
-    def database(self):
+    def database(self) -> Database | None:
+        """
+        Return database
+        :return: Database | None
+        """
         return self.request.app.database
 
     @property
-    def store(self) -> Store:
+    def store(self) -> Store | None:
+        """
+        Return store
+        :return: Store | None
+        """
         return self.request.app.store
 
     @property
     def data(self) -> dict:
+        """
+        Return request data
+        :return: dict
+        """
         return self.request.get("data", {})
 
 
@@ -58,6 +78,11 @@ cors = aiohttp_cors.setup(app)
 
 
 def setup_app(config: dict) -> Application:
+    """
+    Setup Application using configuration
+    :param config: dict
+    :return: Application
+    """
     setup_logging(app)
     setup_config(app=app, config=config)
     session_setup(app, EncryptedCookieStorage(app.config.session.key))

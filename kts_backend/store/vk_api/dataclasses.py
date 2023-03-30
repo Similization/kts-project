@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(slots=True)
 class UpdateObject:
     id: int
     user_id: int
@@ -9,13 +9,13 @@ class UpdateObject:
     body: str
 
 
-@dataclass
+@dataclass(slots=True)
 class Update:
     type: str
     object: UpdateObject
 
 
-@dataclass
+@dataclass(slots=True)
 class Message:
     user_id: int
     peer_id: str

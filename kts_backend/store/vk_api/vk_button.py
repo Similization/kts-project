@@ -6,21 +6,33 @@ from typing import Optional, Literal
 class VkButton:
     def __init__(
         self,
-        payload: Optional[str] = None,
+        payload: str | None = None,
         type_: Literal["text", "open link", "callback"] = "text",
         color: Literal[
             "primary", "secondary", "negative", "positive"
         ] = "secondary",
-        label: Optional[str] = None,
-        hash_: Optional[str] = None,
+        label: str | None = None,
+        hash_: str | None = None,
     ):
+        """
+        Initialize VkButton object, using:
+        :param payload: str | None
+        :param type_: Literal["text", "open link", "callback"]
+        :param color: Literal["primary", "secondary", "negative", "positive"]
+        :param label: str | None
+        :param hash_: str | None
+        """
         self.type: str = type_
         self.color: Optional[str] = color
         self.label: Optional[str] = label
         self.payload: str = payload
         self.hash: Optional[str] = hash_
 
-    def convert_to_dict(self):
+    def convert_to_dict(self) -> dict:
+        """
+        Convert VkButton object to dict, used in vk
+        :return: dict
+        """
         button_to_dict = {"action": {}}
         for k, v in self.__dict__.items():
             if v is None:

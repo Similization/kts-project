@@ -12,6 +12,10 @@ class PoleChuDesException(Exception):
 
 class PoleChuDesGame:
     def __init__(self, app: Application):
+        """
+        Initialize PoleChuDes object, using app
+        :param app: Application
+        """
         self.app = app
         self.game: GameFull | None = None
         self.players: List[PlayerFull] = list()
@@ -21,7 +25,12 @@ class PoleChuDesGame:
         self.guessed_word: str = ""
         self.guessed_letters: Set[str] = set()
 
-    async def init_from(self, game: GameFull):
+    async def init_from(self, game: GameFull) -> None:
+        """
+        Fill PoleChuDes object fields, using game
+        :param game: GameFull
+        :return: None
+        """
         self.game: GameFull = game
         self.players = game.player_list
         self.current_player = choice(self.players)
@@ -32,6 +41,12 @@ class PoleChuDesGame:
         self.guessed_letters.remove("*")
 
     async def get_player(self, player_id: int) -> PlayerFull | None:
+        """
+        Get player from PoleChuDes object players,
+        otherwise return None
+        :param player_id: int
+        :return: PlayerFull | None
+        """
         for player in self.players:
             if player.id == player_id:
                 return player
