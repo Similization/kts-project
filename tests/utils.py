@@ -32,8 +32,8 @@ def error_response(status: str, message: str, data: dict) -> dict:
 def use_inspector(conn):
     """
     Get table names
-    :param conn: 
-    :return: 
+    :param conn:
+    :return:
     """
     inspector = inspect(conn)
     return inspector.get_table_names()
@@ -42,9 +42,9 @@ def use_inspector(conn):
 async def check_empty_table_exists(cli, table_name: str):
     """
     Check if empty table is exist
-    :param cli: 
+    :param cli:
     :param table_name: str
-    :return: 
+    :return:
     """
     engine: AsyncEngine = cli.app.database._engine
     async with engine.begin() as conn:
