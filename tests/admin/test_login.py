@@ -4,11 +4,20 @@ from tests.utils import ok_response, check_empty_table_exists
 
 class TestPlayerStore:
     async def test_table_exists(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         await check_empty_table_exists(cli, "admin")
 
 
 class TestAdminLoginView:
     async def test_create_on_startup(self, store: Store, config):
+        """
+        :param store:
+        :param config:
+        :return:
+        """
         admin = await store.admin.get_admin_by_email(email=config.admin.email)
         assert admin is not None
         assert admin.email == config.admin.email
@@ -16,6 +25,11 @@ class TestAdminLoginView:
         assert admin.id == 1
 
     async def test_success(self, cli, config):
+        """
+        :param cli:
+        :param config:
+        :return:
+        """
         resp = await cli.post(
             "/admin.login",
             json={
@@ -30,6 +44,10 @@ class TestAdminLoginView:
         )
 
     async def test_missed_email(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         resp = await cli.post(
             "/admin.login",
             json={
@@ -42,6 +60,10 @@ class TestAdminLoginView:
         assert data["data"]["email"][0] == "Missing data for required field."
 
     async def test_not_valid_credentials(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         resp = await cli.post(
             "/admin.login",
             json={
@@ -54,6 +76,10 @@ class TestAdminLoginView:
         assert data["status"] == "forbidden"
 
     async def test_different_method(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         resp = await cli.get(
             "/admin.login",
             json={

@@ -7,25 +7,31 @@ import pytest
 import yaml
 from aiohttp.test_utils import loop_context, TestClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.util._collections import FacadeDict
 
 from kts_backend.admin.dataclasses import Admin
 from kts_backend.admin.model import AdminModel
 from kts_backend.store import Database
 from kts_backend.store import Store
-from kts_backend.web.app import setup_app
+from kts_backend.web.app import setup_app, Application
 from kts_backend.web.config import Config
 
 
 @pytest.fixture(scope="session")
 def event_loop():
+    """
+    :return:
+    """
     with loop_context() as _loop:
         yield _loop
 
 
 @pytest.fixture(scope="session")
-def server():
+def server() -> Application:
+    """
+    :return: Application
+    """
     config = yaml.safe_load(Path("config.yaml").read_text())
     app = setup_app(config=config)
 
@@ -43,16 +49,28 @@ def server():
 
 @pytest.fixture
 def store(server) -> Store:
+    """
+    :param server:
+    :return: Store
+    """
     return server.store
 
 
 @pytest.fixture
-def db_session(server):
+def db_session(server) -> async_sessionmaker | None:
+    """
+    :param server:
+    :return:  async_sessionmaker | None
+    """
     return server.database.session
 
 
 @pytest.fixture(autouse=True, scope="function")
 async def clear_db(server):
+    """
+    :param server:
+    :return:
+    """
     yield
     try:
         session = AsyncSession(server.database._engine)
@@ -77,16 +95,31 @@ async def clear_db(server):
 
 @pytest.fixture
 def config(server) -> Config:
+    """
+    :param server:
+    :return: Config
+    """
     return server.config
 
 
 @pytest.fixture(autouse=True)
 def cli(aiohttp_client, event_loop, server) -> TestClient:
+    """
+    :param aiohttp_client:
+    :param event_loop:
+    :param server:
+    :return: TestClient
+    """
     return event_loop.run_until_complete(aiohttp_client(server))
 
 
 @pytest.fixture
 async def authed_cli(cli, config) -> TestClient:
+    """
+    :param cli:
+    :param config:
+    :return: TestClient
+    """
     await cli.post(
         "/admin.login",
         data={
@@ -99,6 +132,12 @@ async def authed_cli(cli, config) -> TestClient:
 
 @pytest.fixture(autouse=True)
 async def admin(cli, db_session, config: Config) -> Admin:
+    """
+    :param cli:
+    :param db_session:
+    :param config:
+    :return: Admin
+    """
     new_admin = AdminModel(
         email=config.admin.email,
         password=sha256(config.admin.password.encode()).hexdigest(),

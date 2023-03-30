@@ -17,6 +17,10 @@ from kts_backend.store.vk_api.poller import QUEUE_NAME
 
 class Worker:
     def __init__(self, store: Store, concurrent_workers: int):
+        """
+        :param store: Store
+        :param concurrent_workers: int
+        """
         self.store = store
         self.connection: AbstractConnection | None = None
         self.channel: AbstractChannel | None = None
@@ -24,7 +28,10 @@ class Worker:
         self.concurrent_workers = concurrent_workers
         self._tasks: List[asyncio.Task] = []
 
-    async def start(self):
+    async def start(self) -> None:
+        """
+        :return: None
+        """
         self.connection = await connect("amqp://guest:guest@localhost/")
         async with self.connection:
             self.channel: AbstractChannel = await self.connection.channel()
@@ -38,6 +45,10 @@ class Worker:
             await asyncio.Future()
 
     async def callback(self, message: AbstractIncomingMessage) -> None:
+        """
+        :param message: AbstractIncomingMessage
+        :return: None
+        """
         body_to_dict = json.loads(message.body)
         update_object_dict = body_to_dict["object"]
         update_object = UpdateObject(
@@ -50,17 +61,29 @@ class Worker:
         await asyncio.sleep(1)
         await self.handle_update(updates=update)
 
-    async def handle_update(self, updates: list[Update] | Update | None):
+    async def handle_update(
+        self, updates: List[Update] | Update | None
+    ) -> None:
+        """
+        :param updates: List[Update] | Update | None
+        :return: None
+        """
         await self.store.bots_manager.handle_updates(updates=updates)
 
-    async def _worker(self):
+    async def _worker(self) -> None:
+        """
+        :return: None
+        """
         while True:
             try:
                 await self.queue.consume(callback=self.callback, no_ack=True)
             finally:
                 await self.queue.cancel(consumer_tag="")
 
-    async def stop(self):
+    async def stop(self) -> None:
+        """
+        :return: None
+        """
         for task in self._tasks:
             await task
         await self.connection.close()

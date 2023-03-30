@@ -12,9 +12,19 @@ from tests.utils import check_empty_table_exists
 
 class TestPlayerStore:
     async def test_table_exists(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         await check_empty_table_exists(cli, "game")
 
     async def test_create_game(self, cli, store: Store, game_data_1: GameData):
+        """
+        :param cli:
+        :param store:
+        :param game_data_1:
+        :return:
+        """
         chat_id: int = 1
         created_game = await store.game.create_game(
             game_data_id=game_data_1.id, chat_id=chat_id
@@ -33,6 +43,11 @@ class TestPlayerStore:
         assert game_from_db.chat_id == chat_id
 
     async def test_create_game_with_no_game_data(self, cli, store: Store):
+        """
+        :param cli:
+        :param store:
+        :return:
+        """
         chat_id: int = 1
         game_data_id: int = 1
 
@@ -43,5 +58,10 @@ class TestPlayerStore:
         assert exc_info.value.orig.pgcode == "23503"
 
     async def test_get_game_by_id(self, cli, store: Store, game_1: Game):
-        print()
+        """
+        :param cli:
+        :param store:
+        :param game_1:
+        :return:
+        """
         assert game_1 == await store.game.get_game(game_id=game_1.id)

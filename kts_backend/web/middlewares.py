@@ -26,6 +26,12 @@ if typing.TYPE_CHECKING:
 
 @middleware
 async def auth_middleware(request: "Request", handler: callable):
+    """
+    Authorization middlewares
+    :param request: Request
+    :param handler: callable
+    :return:
+    """
     session = await get_session(request)
     if session:
         request.admin = Admin.from_session(session=session.__dict__)
@@ -44,7 +50,13 @@ HTTP_ERROR_CODES = {
 
 
 @middleware
-async def error_handling_middleware(request: "Request", handler):
+async def error_handling_middleware(request: "Request", handler: callable):
+    """
+    Error handling middleware
+    :param request: Request
+    :param handler:
+    :return: callable
+    """
     try:
         response = await handler(request)
         return response
@@ -103,7 +115,12 @@ async def error_handling_middleware(request: "Request", handler):
         )
 
 
-def setup_middlewares(app: "Application"):
+def setup_middlewares(app: "Application") -> None:
+    """
+    Setup middlewares for an application
+    :param app: Application
+    :return: None
+    """
     # app.middlewares.append(auth_middleware)
     app.middlewares.append(error_handling_middleware)
     app.middlewares.append(validation_middleware)

@@ -53,15 +53,28 @@ class PoleChuDesGame:
         return None
 
     async def check_player(self, player: PlayerFull) -> bool:
+        """
+        Check if player exist and his status is in_game
+        :param player: PlayerFull
+        :return: bool
+        """
         player = await self.get_player(player_id=player.id)
         if not player or not player.in_game:
             return False
         return True
 
     async def get_active_players(self) -> List[PlayerFull]:
+        """
+        Get game players, which status is in_game
+        :return: List[PlayerFull]
+        """
         return [player for player in self.players if player.in_game]
 
-    async def next_player(self):
+    async def next_player(self) -> None:
+        """
+        Set next player
+        :return: None
+        """
         # подразумевается, что после того как останется один игрок - игра завершится,
         # поэтому переходить к следующему игроку смысла нет
         next_player_id = self.current_player_id + 1 % len(self.players)
@@ -72,12 +85,24 @@ class PoleChuDesGame:
 
     async def set_player_in_game(
         self, player: PlayerFull, in_game: bool = False
-    ):
+    ) -> None:
+        """
+        Set player in_game status
+        :param player: PlayerFull
+        :param in_game: bool
+        :return: None
+        """
         if not await self.check_player(player=player):
             return
         player.in_game = in_game
 
     async def check_guess(self, vk_id: int, guess: str) -> None:
+        """
+        Check player with vk_id guess
+        :param vk_id: int
+        :param guess: str
+        :return: None
+        """
         # если vk_id не соответствует vk_id того, кто должен ходить сейчас -> ничего не происходит
         if self.current_player.user.vk_id != vk_id:
             return
@@ -108,25 +133,50 @@ class PoleChuDesGame:
                 await self.next_player()
 
     def check_answer(self, answer: str) -> bool:
+        """
+        Check answer
+        :param answer: str
+        :return: bool
+        """
         return self.game_data.answer == answer
 
     @staticmethod
     def check_letter(letter: str) -> bool:
+        """
+        Check letter
+        :param letter: str
+        :return: bool
+        """
         return len(letter) == 1 and (
             "a" <= letter <= "z" or "A" <= letter <= "Z"
         )
 
-    async def add_points(self, player_id: int):
+    async def add_points(self, player_id: int) -> None:
+        """
+        Add points to player
+        :param player_id: int
+        :return: None
+        """
         player = await self.get_player(player_id=player_id)
         if await self.check_player(player=player):
             player.score += self.generate_points()
 
-    async def set_winner(self, player_id: int):
+    async def set_winner(self, player_id: int) -> None:
+        """
+        Set game winner
+        :param player_id: int
+        :return: None
+        """
         player = await self.get_player(player_id=player_id)
         if await self.check_player(player=player):
             player.is_winner = True
 
     async def guess_letter_result(self, letter: str) -> bool:
+        """
+        Guess letter result
+        :param letter: str
+        :return: bool
+        """
         if (
             letter in self.guessed_letters
             or letter not in self.game_data.answer
@@ -143,4 +193,8 @@ class PoleChuDesGame:
 
     @staticmethod
     def generate_points() -> int:
+        """
+        Generate random points
+        :return: int
+        """
         return randint(1, 5) * 10

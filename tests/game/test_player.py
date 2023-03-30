@@ -14,11 +14,22 @@ from tests.utils import check_empty_table_exists
 
 class TestPlayerStore:
     async def test_table_exists(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         await check_empty_table_exists(cli, "player")
 
     async def test_create_player(
         self, cli, store: Store, user_1: User, game_1: Game
     ):
+        """
+        :param cli:
+        :param store:
+        :param user_1:
+        :param game_1:
+        :return:
+        """
         player_id = 1
         score = 200
         is_winner = True
@@ -49,6 +60,12 @@ class TestPlayerStore:
     async def test_create_player_with_no_user(
         self, cli, store: Store, game_1: Game
     ):
+        """
+        :param cli:
+        :param store:
+        :param game_1:
+        :return:
+        """
         player_id = 1
         user_id = 1
         score = 200
@@ -70,6 +87,13 @@ class TestPlayerStore:
     async def test_create_existed_player(
         self, cli, store: Store, user_1: User, player_1: Player
     ):
+        """
+        :param cli:
+        :param store:
+        :param user_1:
+        :param player_1:
+        :return:
+        """
         score = 150
         is_winner = True
         in_game = False
@@ -88,4 +112,11 @@ class TestPlayerStore:
     async def test_get_player_by_id(
         self, cli, store: Store, user_1: User, player_1: Player
     ):
+        """
+        :param cli:
+        :param store:
+        :param user_1:
+        :param player_1:
+        :return:
+        """
         assert player_1 == await store.game.get_player(player_id=player_1.id)

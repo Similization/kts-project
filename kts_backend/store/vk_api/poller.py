@@ -3,7 +3,7 @@ import json
 import logging
 from asyncio import Task
 from dataclasses import asdict
-from typing import Optional, List
+from typing import List
 
 from aio_pika import Message, connect
 from aio_pika.abc import AbstractChannel, AbstractQueue, AbstractConnection
@@ -25,7 +25,7 @@ class Poller:
         self.queue: AbstractQueue | None = None
         self.store: Store = store
         self.is_running: bool = False
-        self.poll_task: Optional[Task] = None
+        self.poll_task: Task | None = None
 
     async def start(self) -> None:
         """

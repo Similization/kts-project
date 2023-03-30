@@ -12,6 +12,14 @@ class VkConversation:
         filter_: Literal["all", "important", "unanswered", "unread"] = "all",
         fields: str = "",
     ):
+        """
+        Initialize VkConversation object, using:
+        :param group_id:
+        :param offset:
+        :param count:
+        :param filter_:
+        :param fields:
+        """
         self.offset: int = offset
         self.count: int = count
         self.filter: str = filter_

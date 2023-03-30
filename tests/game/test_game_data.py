@@ -13,9 +13,18 @@ from tests.utils import ok_response, check_empty_table_exists
 
 class TestGameDataStore:
     async def test_table_exists(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         await check_empty_table_exists(cli, "game_data")
 
     async def test_create_game_data(self, cli, store: Store):
+        """
+        :param cli:
+        :param store:
+        :return:
+        """
         question = "Who wants to be a billionaire?"
         answer = "Everyone"
 
@@ -37,6 +46,12 @@ class TestGameDataStore:
     async def test_create_existed_game_data(
         self, cli, store: Store, game_data_1: GameData
     ):
+        """
+        :param cli:
+        :param store:
+        :param game_data_1:
+        :return:
+        """
         with pytest.raises(IntegrityError) as exc_info:
             await store.game.create_game_data(
                 question=game_data_1.question, answer=game_data_1.answer
@@ -46,6 +61,12 @@ class TestGameDataStore:
     async def test_get_game_data_by_id(
         self, cli, store: Store, game_data_1: GameData
     ):
+        """
+        :param cli:
+        :param store:
+        :param game_data_1:
+        :return:
+        """
         assert game_data_1 == await store.game.get_game_data(
             game_data_id=game_data_1.id
         )
@@ -53,6 +74,12 @@ class TestGameDataStore:
     async def test_get_game_data_list_one(
         self, cli, store: Store, game_data_1: GameData
     ):
+        """
+        :param cli:
+        :param store:
+        :param game_data_1:
+        :return:
+        """
         game_data_list = await store.game.get_game_data_list()
         assert len(game_data_list) == 1
         assert game_data_1 == game_data_list[0]
@@ -60,6 +87,13 @@ class TestGameDataStore:
     async def test_get_game_data_list_many(
         self, cli, store: Store, game_data_1: GameData, game_data_2: GameData
     ):
+        """
+        :param cli:
+        :param store:
+        :param game_data_1:
+        :param game_data_2:
+        :return:
+        """
         game_data_list = await store.game.get_game_data_list()
         assert len(game_data_list) == 2
         created_game_data_1, created_game_data_2 = game_data_list
@@ -69,6 +103,10 @@ class TestGameDataStore:
 
 class TestGameDataAddView:
     async def test_success(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         resp = await cli.post(
             "/game_data.add",
             json={
@@ -87,6 +125,10 @@ class TestGameDataAddView:
         )
 
     async def test_missed_answer(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         resp = await cli.post(
             "/game_data.add",
             json={
@@ -101,6 +143,12 @@ class TestGameDataAddView:
     async def test_existed_question(
         self, cli, store: Store, game_data_1: GameData
     ):
+        """
+        :param cli:
+        :param store:
+        :param game_data_1:
+        :return:
+        """
         with pytest.raises(IntegrityError) as exc_info:
             await store.game.create_game_data(
                 question=game_data_1.question, answer=game_data_1.answer
@@ -108,6 +156,10 @@ class TestGameDataAddView:
         assert exc_info.value.orig.pgcode == "23505"
 
     async def test_different_method(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         resp = await cli.get(
             "/game_data.add",
             json={
@@ -122,6 +174,11 @@ class TestGameDataAddView:
 
 class TestGameDataGetView:
     async def test_success(self, cli, game_data_3):
+        """
+        :param cli:
+        :param game_data_3:
+        :return:
+        """
         resp = await cli.get("/game_data.get")
         assert resp.status == 200
         data = await resp.json()
@@ -138,6 +195,10 @@ class TestGameDataGetView:
         )
 
     async def test_different_method(self, cli):
+        """
+        :param cli:
+        :return:
+        """
         resp = await cli.post("/game_data.get")
         assert resp.status == 405
         data = await resp.json()

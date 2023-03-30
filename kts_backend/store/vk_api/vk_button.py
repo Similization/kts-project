@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Literal
+from typing import Literal
 
 
 @dataclass(slots=True)
@@ -23,10 +23,10 @@ class VkButton:
         :param hash_: str | None
         """
         self.type: str = type_
-        self.color: Optional[str] = color
-        self.label: Optional[str] = label
+        self.color: str | None = color
+        self.label: str | None = label
         self.payload: str = payload
-        self.hash: Optional[str] = hash_
+        self.hash: str | None = hash_
 
     def convert_to_dict(self) -> dict:
         """

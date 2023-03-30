@@ -20,6 +20,10 @@ from kts_backend.user.model import UserModel
 
 @pytest.fixture
 def users(store) -> list[User]:
+    """
+    :param store:
+    :return:
+    """
     return [
         User(id=1, vk_id=100, name="Dan", last_name="Ban", username="@db"),
         User(
@@ -41,6 +45,10 @@ def users(store) -> list[User]:
 
 @pytest.fixture
 def players_1(store) -> list[Player]:
+    """
+    :param store:
+    :return:
+    """
     return [
         Player(
             id=1, user_id=1, score=25, game_id=2, in_game=True, is_winner=False
@@ -53,6 +61,10 @@ def players_1(store) -> list[Player]:
 
 @pytest.fixture
 def players_2(store) -> list[Player]:
+    """
+    :param store:
+    :return:
+    """
     return [
         Player(
             id=1, user_id=1, score=35, game_id=3, in_game=True, is_winner=False
@@ -68,6 +80,10 @@ def players_2(store) -> list[Player]:
 
 @pytest.fixture
 async def user_1(db_session: AsyncSession) -> User:
+    """
+    :param db_session:
+    :return:
+    """
     vk_id = 239360732
     name = "Даниил"
     last_name = "Бахланов"
@@ -88,6 +104,10 @@ async def user_1(db_session: AsyncSession) -> User:
 
 @pytest.fixture
 async def user_2(db_session: AsyncSession) -> User:
+    """
+    :param db_session:
+    :return:
+    """
     vk_id = 239360735
     name = "Петр"
     last_name = "Движев"
@@ -108,6 +128,10 @@ async def user_2(db_session: AsyncSession) -> User:
 
 @pytest.fixture
 async def user_3(db_session: AsyncSession) -> User:
+    """
+    :param db_session:
+    :return:
+    """
     vk_id = 239360735
     name = "Анна"
     last_name = "Панн"
@@ -128,6 +152,10 @@ async def user_3(db_session: AsyncSession) -> User:
 
 @pytest.fixture
 async def game_data_1(db_session: AsyncSession) -> GameData:
+    """
+    :param db_session:
+    :return:
+    """
     question = "Who is the president of Uganda?"
     answer = "Who cares"
     new_game_data = GameDataModel(question=question, answer=answer)
@@ -144,6 +172,10 @@ async def game_data_1(db_session: AsyncSession) -> GameData:
 
 @pytest.fixture
 async def game_data_2(db_session: AsyncSession) -> GameData:
+    """
+    :param db_session:
+    :return:
+    """
     question = "Somebody once told who?"
     answer = "Me"
     new_game_data = GameDataModel(question=question, answer=answer)
@@ -160,6 +192,10 @@ async def game_data_2(db_session: AsyncSession) -> GameData:
 
 @pytest.fixture
 async def game_data_3(db_session: AsyncSession) -> GameData:
+    """
+    :param db_session:
+    :return:
+    """
     question = "Who wants to be a billionaire?"
     answer = "Everyone"
     new_game_data = GameDataModel(question=question, answer=answer)
@@ -176,6 +212,11 @@ async def game_data_3(db_session: AsyncSession) -> GameData:
 
 @pytest.fixture
 async def game_1(db_session: AsyncSession, game_data_1: GameData) -> Game:
+    """
+    :param db_session:
+    :param game_data_1:
+    :return:
+    """
     game_data_id = game_data_1.id
     chat_id = 1
     chat_message_id = 200
@@ -207,6 +248,12 @@ async def game_1(db_session: AsyncSession, game_data_1: GameData) -> Game:
 async def game_2(
     db_session: AsyncSession, players_1: List[Player], game_data_2: GameData
 ) -> Game:
+    """
+    :param db_session:
+    :param players_1:
+    :param game_data_2:
+    :return:
+    """
     game_data_id = game_data_2.id
     created_at = datetime.datetime.strptime(
         "2023-02-22 12:45:00.000000",
@@ -246,6 +293,12 @@ async def game_2(
 async def game_3(
     db_session: AsyncSession, players_2: List[Player], game_data_3: GameData
 ) -> Game:
+    """
+    :param db_session:
+    :param players_2:
+    :param game_data_3:
+    :return:
+    """
     game_data_id = game_data_3.id
     chat_id = 2
 
@@ -275,6 +328,12 @@ async def game_3(
 async def player_1(
     db_session: AsyncSession, user_1: User, game_1: Game
 ) -> Player:
+    """
+    :param db_session:
+    :param user_1:
+    :param game_1:
+    :return:
+    """
     user_id = user_1.id
     game_id = game_1.id
     new_player = PlayerModel(user_id=user_id, game_id=game_id)
@@ -293,6 +352,11 @@ async def player_1(
 
 @pytest.fixture
 async def player_2(db_session: AsyncSession, game_2: Game) -> Player:
+    """
+    :param db_session:
+    :param game_2:
+    :return:
+    """
     user_id = 2
     new_player = PlayerModel(user_id=user_id)
     async with db_session.begin() as session:
@@ -310,6 +374,11 @@ async def player_2(db_session: AsyncSession, game_2: Game) -> Player:
 
 @pytest.fixture
 async def player_3(db_session: AsyncSession, game_1: Game) -> Player:
+    """
+    :param db_session:
+    :param game_1:
+    :return:
+    """
     user_id = 3
     new_player = PlayerModel(user_id=user_id)
     async with db_session.begin() as session:

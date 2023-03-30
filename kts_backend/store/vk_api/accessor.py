@@ -18,6 +18,11 @@ API_PATH = "https://api.vk.com/method/"
 
 class VkApiAccessor(BaseAccessor):
     def __init__(self, app: "Application", *args, **kwargs):
+        """
+        :param app:
+        :param args:
+        :param kwargs:
+        """
         super().__init__(app, *args, **kwargs)
         self.session: ClientSession | None = None
         self.key: str | None = None
@@ -27,6 +32,10 @@ class VkApiAccessor(BaseAccessor):
         self.ts: int | None = None
 
     async def connect(self, app: "Application"):
+        """
+        :param app:
+        :return:
+        """
         self.session = ClientSession(connector=TCPConnector(verify_ssl=False))
         try:
             await self._get_long_poll_service()
@@ -41,6 +50,10 @@ class VkApiAccessor(BaseAccessor):
         await self.worker.start()
 
     async def disconnect(self, app: "Application"):
+        """
+        :param app:
+        :return:
+        """
         if self.poller:
             await self.poller.stop()
         if self.session:
@@ -48,6 +61,12 @@ class VkApiAccessor(BaseAccessor):
 
     @staticmethod
     def _build_query(host: str, method: str, params: dict) -> str:
+        """
+        :param host:
+        :param method:
+        :param params:
+        :return:
+        """
         url = host + method + "?"
         if "v" not in params:
             params["v"] = "5.131"
@@ -55,6 +74,9 @@ class VkApiAccessor(BaseAccessor):
         return url
 
     async def _get_long_poll_service(self):
+        """
+        :return:
+        """
         async with self.session.get(
             self._build_query(
                 host=API_PATH,
@@ -73,6 +95,9 @@ class VkApiAccessor(BaseAccessor):
             self.logger.info(self.server)
 
     async def poll(self) -> List[Update]:
+        """
+        :return:
+        """
         async with self.session.get(
             self._build_query(
                 host=self.server,
@@ -104,8 +129,11 @@ class VkApiAccessor(BaseAccessor):
                 )
             return updates
 
-    # get user from chat
     async def get_chat_users(self, chat_id: str):
+        """
+        :param chat_id:
+        :return:
+        """
         async with self.session.get(
             self._build_query(
                 host=API_PATH,
@@ -121,6 +149,9 @@ class VkApiAccessor(BaseAccessor):
             return profiles
 
     async def get_active_chat_id_list(self) -> List[dict]:
+        """
+        :return:
+        """
         async with self.session.get(
             self._build_query(
                 host=API_PATH,
@@ -140,10 +171,14 @@ class VkApiAccessor(BaseAccessor):
                 and chat["conversation"]["can_write"]["allowed"]
             ]
 
-    # send message to chat or to user
     async def send_message(
         self, message: Message, keyboard: Optional[dict] = None
     ) -> None:
+        """
+        :param message:
+        :param keyboard:
+        :return:
+        """
         params = {
             "random_id": random.randint(1, 2**32),
             "message": message.text,
