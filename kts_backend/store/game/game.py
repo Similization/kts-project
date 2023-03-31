@@ -130,7 +130,9 @@ class PoleChuDesGame:
                     game_result += "game over!\n"
                 else:
                     await self.next_player()
-                    game_result += f"next player is: {self.current_player.user.username}\n"
+                    game_result += (
+                        f"next player is: {self.current_player.user.username}\n"
+                    )
                 return game_result
         else:
             if self.guess_letter_result(letter=guess):
