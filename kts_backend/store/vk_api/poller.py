@@ -33,7 +33,7 @@ class Poller:
         :return: None
         """
         self.is_running = True
-        self.connection = await connect("amqp://guest:guest@localhost/")
+        self.connection = await connect(host="localhost", port=5672)
         self.channel = await self.connection.channel()
         self.queue = await self.channel.declare_queue(name=QUEUE_NAME)
         self.poll_task = asyncio.create_task(self.poll())

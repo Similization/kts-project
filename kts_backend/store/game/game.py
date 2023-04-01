@@ -84,7 +84,7 @@ class PoleChuDesGame:
         self.current_player = self.players[self.current_player_id]
 
     async def set_player_in_game(
-            self, player: PlayerFull, in_game: bool = False
+        self, player: PlayerFull, in_game: bool = False
     ) -> None:
         """
         Set player in_game status
@@ -106,9 +106,11 @@ class PoleChuDesGame:
         game_result: str = ""
         # если vk_id не соответствует vk_id того, кто должен ходить сейчас -> ничего не происходит
         if self.current_player.user.vk_id != vk_id:
-            return f"Сейчас не ваш ход или вы выбыли из игры(\n" \
-                   f"Ход принадлежит игроку: {self.current_player.user.username}!\n" \
-                   f"Отгданное слово: {self.guessed_word}\n"
+            return (
+                f"Сейчас не ваш ход или вы выбыли из игры(\n"
+                f"Ход принадлежит игроку: {self.current_player.user.username}!\n"
+                f"Отгданное слово: {self.guessed_word}\n"
+            )
 
         active_players = await self.get_active_players()
         count_of_active_players = len(active_players)
@@ -125,7 +127,9 @@ class PoleChuDesGame:
                 game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
                 game_result += f"Отгданное слово: {self.guessed_word}\n"
                 game_result += "Игра завершена!\n"
-                await self.app.store.game.update_player(player=self.current_player)
+                await self.app.store.game.update_player(
+                    player=self.current_player
+                )
                 self.game.finished_at = datetime.utcnow()
                 self.game.previous_player = self.current_player
                 await self.app.store.game.update_game(game=self.game)
@@ -137,15 +141,15 @@ class PoleChuDesGame:
                 game_result = f"Игрок: {self.current_player.user.username} не угадал слово\n"
                 game_result += f"Отгданное слово: {self.guessed_word}\n"
                 self.current_player.in_game = False
-                await self.app.store.game.update_player(player=self.current_player)
+                await self.app.store.game.update_player(
+                    player=self.current_player
+                )
                 if count_of_active_players == 1:
                     self.game.finished_at = datetime.utcnow()
                     game_result += "Игра завершена!\n"
                 else:
                     await self.next_player()
-                    game_result += (
-                        f"Следующий игрок: {self.current_player.user.username}\n"
-                    )
+                    game_result += f"Следующий игрок: {self.current_player.user.username}\n"
                 self.game.previous_player = self.current_player
                 await self.app.store.game.update_game(game=self.game)
                 return game_result
@@ -160,7 +164,9 @@ class PoleChuDesGame:
                 # угадал слово
                 if self.check_answer(answer=self.guessed_word):
                     self.current_player.is_winner = True
-                    await self.app.store.game.update_player(player=self.current_player)
+                    await self.app.store.game.update_player(
+                        player=self.current_player
+                    )
                     self.game.finished_at = datetime.utcnow()
                     game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
                     game_result += "Игра завершена!\n"
@@ -173,7 +179,9 @@ class PoleChuDesGame:
                 game_result += f"Игрок: {self.current_player.user.username} не угадал букву(\n"
                 game_result += f"Отгданное слово: {self.guessed_word}\n"
                 await self.next_player()
-                game_result += f"Следующий игрок: {self.current_player.user.username}\n"
+                game_result += (
+                    f"Следующий игрок: {self.current_player.user.username}\n"
+                )
                 self.game.previous_player = self.current_player
                 await self.app.store.game.update_game(game=self.game)
                 return game_result
@@ -196,9 +204,7 @@ class PoleChuDesGame:
         :param letter: str
         :return: bool
         """
-        return len(letter) == 1 and (
-                "a" <= letter.lower() <= "z"
-        )
+        return len(letter) == 1 and ("a" <= letter.lower() <= "z")
 
     async def add_points(self, player_id: int) -> None:
         """
@@ -229,8 +235,8 @@ class PoleChuDesGame:
         lower_letter = letter.lower()
         lower_answer = self.game.game_data.answer.lower()
         if (
-                lower_letter in self.guessed_letters
-                or lower_letter not in lower_answer
+            lower_letter in self.guessed_letters
+            or lower_letter not in lower_answer
         ):
             return False
         self.guessed_letters.add(lower_letter)
@@ -238,7 +244,7 @@ class PoleChuDesGame:
             if lower_answer[i] != letter:
                 continue
             self.guessed_word = (
-                    self.guessed_word[:i] + letter + self.guessed_word[i + 1:]
+                self.guessed_word[:i] + letter + self.guessed_word[i + 1 :]
             )
         return True
 

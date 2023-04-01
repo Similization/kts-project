@@ -123,7 +123,9 @@ class UserAccessor(BaseAccessor):
                 return self.user_model2user(user_model=user_model)
             return None
 
-    async def get_user_list_by_vk_id_list(self, vk_id_list: List[str]) -> List[User]:
+    async def get_user_list_by_vk_id_list(
+        self, vk_id_list: List[str]
+    ) -> List[User]:
         """
         Get User object list from database by vk_id list
         :param vk_id_list: List[str]
@@ -135,7 +137,9 @@ class UserAccessor(BaseAccessor):
             user_model_list: List[UserModel] | None = res.scalars()
             print(user_model_list)
             if user_model_list:
-                return self.user_model_list2user_list(user_model_list=user_model_list)
+                return self.user_model_list2user_list(
+                    user_model_list=user_model_list
+                )
             return []
 
     async def create_user(self, user: List[dict] | dict) -> List[User] | User:

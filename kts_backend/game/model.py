@@ -23,31 +23,19 @@ class PlayerModel(db):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "user.id",
-            use_alter=False,
-            ondelete="CASCADE"
-        ),
+        ForeignKey("user.id", use_alter=False, ondelete="CASCADE"),
         nullable=False,
     )
     user: Mapped["UserModel"] = relationship(
-        foreign_keys=[user_id],
-        backref="player",
-        lazy="subquery"
+        foreign_keys=[user_id], backref="player", lazy="subquery"
     )
 
     game_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "game.id",
-            use_alter=False,
-            ondelete="CASCADE"
-        ),
+        ForeignKey("game.id", use_alter=False, ondelete="CASCADE"),
         nullable=False,
     )
     game: Mapped["GameModel"] = relationship(
-        back_populates="player_list",
-        foreign_keys=[game_id],
-        lazy="subquery"
+        back_populates="player_list", foreign_keys=[game_id], lazy="subquery"
     )
 
     score = Column(Integer, nullable=False, default=0)
@@ -69,18 +57,14 @@ class GameModel(db):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     game_data_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "game_data.id",
-            use_alter=False,
-            ondelete="SET NULL"
-        ),
+        ForeignKey("game_data.id", use_alter=False, ondelete="SET NULL"),
         nullable=False,
     )
     game_data: Mapped["GameDataModel"] = relationship(
         cascade="all,delete",
         foreign_keys=[game_data_id],
         backref="data_game",
-        lazy="subquery"
+        lazy="subquery",
     )
 
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
@@ -100,12 +84,12 @@ class GameModel(db):
     previous_player: Mapped["PlayerModel"] = relationship(
         backref="player_game",
         foreign_keys=[previous_player_id],
-        lazy="subquery"
+        lazy="subquery",
     )
 
     player_list: Mapped[List["PlayerModel"]] = relationship(
         back_populates="game",
         cascade="all,delete",
         primaryjoin="(GameModel.id==PlayerModel.game_id)",
-        lazy="subquery"
+        lazy="subquery",
     )

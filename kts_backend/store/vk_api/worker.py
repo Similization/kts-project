@@ -32,7 +32,7 @@ class Worker:
         """
         :return: None
         """
-        self.connection = await connect("amqp://guest:guest@localhost/")
+        self.connection = await connect(host="localhost", port=5672)
         async with self.connection:
             self.channel: AbstractChannel = await self.connection.channel()
             self.queue: AbstractQueue = await self.channel.declare_queue(
@@ -49,7 +49,7 @@ class Worker:
         :param message: AbstractIncomingMessage
         :return: None
         """
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
         body_to_dict = json.loads(message.body)
         update_object_dict = body_to_dict["object"]
         update_object = UpdateObject(
@@ -76,10 +76,7 @@ class Worker:
         :return: None
         """
         while True:
-            try:
-                await self.queue.consume(callback=self.callback, no_ack=True)
-            finally:
-                await self.queue.cancel(consumer_tag="")
+            await self.queue.consume(callback=self.callback, no_ack=True)
 
     async def stop(self) -> None:
         """
@@ -88,4 +85,3 @@ class Worker:
         for task in self._tasks:
             task.cancel()
         await self.connection.close()
-

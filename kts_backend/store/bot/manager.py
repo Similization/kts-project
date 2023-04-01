@@ -81,18 +81,22 @@ class BotManager:
                         message=Message(
                             user_id=update.object.user_id,
                             peer_id=update.object.peer_id,
-                            text=parse_text(text="Игроков слишком много!\n\n" + text),
+                            text=parse_text(
+                                text="Игроков слишком много!\n\n" + text
+                            ),
                         ),
-                        keyboard=KEYBOARD_FINISH
+                        keyboard=KEYBOARD_FINISH,
                     )
                 if len(username_list) < 3:
                     await self.app.store.vk_api.send_message(
                         message=Message(
                             user_id=update.object.user_id,
                             peer_id=update.object.peer_id,
-                            text=parse_text(text="Игроков слишком мало!\n\n" + text),
+                            text=parse_text(
+                                text="Игроков слишком мало!\n\n" + text
+                            ),
                         ),
-                        keyboard=KEYBOARD_FINISH
+                        keyboard=KEYBOARD_FINISH,
                     )
                 game_data_list: List[
                     GameData
@@ -100,7 +104,9 @@ class BotManager:
                 random_game_data: GameData = choice(game_data_list)
 
                 # get users from bd if not exist - then create
-                profiles: List[dict] = await self.app.store.vk_api.get_chat_users(
+                profiles: List[
+                    dict
+                ] = await self.app.store.vk_api.get_chat_users(
                     chat_id=int(update.object.peer_id)
                 )
                 profile_dicts: List[dict] = [
@@ -108,21 +114,19 @@ class BotManager:
                         "vk_id": profile["id"],
                         "name": profile["first_name"],
                         "last_name": profile["last_name"],
-                        "username": "@" + profile["screen_name"]
-                    } for profile in profiles
+                        "username": "@" + profile["screen_name"],
+                    }
+                    for profile in profiles
                 ]
-                created_game: Game = (
-                    await self.app.store.game.create_game(
-                        game_data_id=random_game_data.id,
-                        answer=random_game_data.answer,
-                        chat_id=update.object.peer_id,
-                        required_player_count=len(username_list)
-                    )
+                created_game: Game = await self.app.store.game.create_game(
+                    game_data_id=random_game_data.id,
+                    answer=random_game_data.answer,
+                    chat_id=update.object.peer_id,
+                    required_player_count=len(username_list),
                 )
 
                 await self.app.store.game.create_player_list_by_user_info(
-                    game_id=created_game.id,
-                    users_info=profile_dicts
+                    game_id=created_game.id, users_info=profile_dicts
                 )
 
                 created_full_game: GameFull = (
@@ -158,7 +162,7 @@ class BotManager:
                             + f"Первым ходит: {new_pole_game.current_player.user.username}"
                         ),
                     ),
-                    keyboard=KEYBOARD_FINISH
+                    keyboard=KEYBOARD_FINISH,
                 )
             else:
                 await self.app.store.vk_api.send_message(
@@ -167,10 +171,10 @@ class BotManager:
                         peer_id=update.object.peer_id,
                         text=parse_text(text=text),
                     ),
-                    keyboard=KEYBOARD_FINISH
+                    keyboard=KEYBOARD_FINISH,
                 )
         else:
-            if update.object.body == "Заверши игру":
+            if update.object.body == "Завершить игру":
                 await self.app.store.vk_api.send_message(
                     # await game.get_winner()
                     message=Message(
@@ -221,11 +225,11 @@ class BotManager:
                         + res
                     ),
                 ),
-                keyboard=keyboard
+                keyboard=keyboard,
             )
 
     async def handle_updates(
-            self, updates: list[Update] | Update | None = None
+        self, updates: list[Update] | Update | None = None
     ) -> None:
         """
         Handle updates
@@ -241,3 +245,7 @@ class BotManager:
         for update in updates:
             # print(await self.app.store.vk_api.get_chat_users(update.object.peer_id))
             await self.check_update(update=update)
+            await self.app.store.vk_api.delete_message_from_chat(
+                message_ids=update.object.message_id,
+                chat_id=update.object.peer_id,
+            )

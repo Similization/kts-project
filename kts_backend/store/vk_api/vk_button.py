@@ -6,7 +6,7 @@ from typing import Literal
 class VkButton:
     def __init__(
         self,
-        payload: str | None = None,
+        payload: dict | None = None,
         type_: Literal["text", "open link", "callback"] = "text",
         color: Literal[
             "primary", "secondary", "negative", "positive"
@@ -23,9 +23,11 @@ class VkButton:
         :param hash_: str | None
         """
         self.type: Literal["text", "open link", "callback"] = type_
-        self.color: Literal["primary", "secondary", "negative", "positive"] = color
+        self.color: Literal[
+            "primary", "secondary", "negative", "positive"
+        ] = color
         self.label: str | None = label
-        self.payload: str = payload
+        self.payload: dict = payload
         self.hash: str | None = hash_
 
     def convert_to_dict(self) -> dict:
@@ -44,12 +46,16 @@ class VkButton:
         return button_to_dict
 
 
+CALLBACK_PAYLOAD = ("{finish}",)
+
 CREATE_GAME_BUTTON = VkButton(
-    type_="callback", label="Создать игру", color="secondary"
+    type_="callback",
+    label="Создать игру",
+    color="secondary",
 )
 JOIN_GAME_BUTTON = VkButton(
-    type_="callback", label="Присоединиться", color="positive"
+    type_="callback",
+    label="Присоединиться",
+    color="positive",
 )
-FINISH_GAME_BUTTON = VkButton(
-    type_="callback", label="Завершить игру", color="negative"
-)
+FINISH_GAME_BUTTON = VkButton(label="Завершить игру", color="negative")

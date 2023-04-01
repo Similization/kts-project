@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class UpdateObject:
     id: int
     user_id: int
+    message_id: int
     peer_id: str
     body: str
 

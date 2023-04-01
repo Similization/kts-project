@@ -39,7 +39,7 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def player_model_list2player_list(
-            player_model_list: List[PlayerModel],
+        player_model_list: List[PlayerModel],
     ) -> List[Player]:
         """
         Convert list of PlayerModel objects to list of Player objects
@@ -53,8 +53,8 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def game_model2game(
-            game_model: GameModel,
-            player_list: List[Player] | List[PlayerModel] | None = None,
+        game_model: GameModel,
+        player_list: List[Player] | List[PlayerModel] | None = None,
     ) -> Game:
         """
         Convert GameModel object to Game
@@ -98,7 +98,7 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def game_data_model_list2game_data_list(
-            game_data_model_list: List[GameDataModel],
+        game_data_model_list: List[GameDataModel],
     ) -> List[GameData]:
         """
         Convert list of GameDataModel objects to list of GameData objects
@@ -151,7 +151,7 @@ class GameAccessor(BaseAccessor):
         return [asdict(player) for player in player_list]
 
     async def get_player(
-            self, player_id: List[int] | int
+        self, player_id: List[int] | int
     ) -> List[Player] | Player:
         """
         Get player objects from database
@@ -204,7 +204,7 @@ class GameAccessor(BaseAccessor):
         )
 
     async def create_player(
-            self, player: List[Player] | Player
+        self, player: List[Player] | Player
     ) -> List[Player] | Player:
         """
         Create player objects in database
@@ -233,7 +233,7 @@ class GameAccessor(BaseAccessor):
             return self.player_model2player(player_model=player_model)
 
     async def create_player_list(
-            self, player_list: List[Player]
+        self, player_list: List[Player]
     ) -> List[Player]:
         """
         Create list of players in database
@@ -260,7 +260,7 @@ class GameAccessor(BaseAccessor):
             )
 
     async def update_player(
-            self, player: List[Player] | Player
+        self, player: List[Player] | Player
     ) -> List[Player] | Player:
         """
         Update player objects in database
@@ -289,7 +289,7 @@ class GameAccessor(BaseAccessor):
             return self.player_model2player(player_model=player_model)
 
     async def update_player_list(
-            self, player_list: List[Player]
+        self, player_list: List[Player]
     ) -> List[Player]:
         """
         Update list of players in database
@@ -316,7 +316,7 @@ class GameAccessor(BaseAccessor):
             )
 
     async def delete_player(
-            self, player_id: List[int] | int
+        self, player_id: List[int] | int
     ) -> List[Player] | Player:
         """
         Delete player objects from database
@@ -344,7 +344,7 @@ class GameAccessor(BaseAccessor):
             return self.player_model2player(player_model=player_model)
 
     async def delete_player_list(
-            self, player_id_list: List[int]
+        self, player_id_list: List[int]
     ) -> List[Player]:
         """
         Create list of players in database
@@ -406,11 +406,11 @@ class GameAccessor(BaseAccessor):
         return self.game_model2game(game_model=game, player_list=player_list)
 
     async def create_game(
-            self,
-            game_data_id: int,
-            answer: str,
-            chat_id: int,
-            required_player_count: int = 3
+        self,
+        game_data_id: int,
+        answer: str,
+        chat_id: int,
+        required_player_count: int = 3,
     ) -> Game:
         """
         Create Game object without players
@@ -437,11 +437,11 @@ class GameAccessor(BaseAccessor):
         return self.game_model2game(game_model=game)
 
     async def create_game_with_players(
-            self,
-            game_data_id: int,
-            answer: str,
-            chat_id: int,
-            player_list: List[Player]
+        self,
+        game_data_id: int,
+        answer: str,
+        chat_id: int,
+        player_list: List[Player],
     ) -> Game:
         """
         Create Game object with players (Player objects)
@@ -477,7 +477,7 @@ class GameAccessor(BaseAccessor):
             .filter_by(id=game.id)
             .values(
                 finished_at=game.finished_at,
-                previous_player_id=game.previous_player.id
+                previous_player_id=game.previous_player.id,
             )
         )
         async with self.app.database.session.begin() as session:
@@ -575,8 +575,8 @@ class GameAccessor(BaseAccessor):
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
             game_data_model_seq: Sequence[
-                                     GameDataModel
-                                 ] | None = res.scalars().all()
+                GameDataModel
+            ] | None = res.scalars().all()
             game_data_model_list: List[GameDataModel] = list(
                 game_data_model_seq
             )
@@ -634,7 +634,7 @@ class GameAccessor(BaseAccessor):
             ]
 
     async def update_player_points(
-            self, player_id: int, new_score: int
+        self, player_id: int, new_score: int
     ) -> Player:
         """
         Increase player points
@@ -675,7 +675,7 @@ class GameAccessor(BaseAccessor):
         return self.player_model2player(player_model=player_model)
 
     async def create_player_list_by_user_info(
-            self, game_id: int, users_info: List[dict]
+        self, game_id: int, users_info: List[dict]
     ) -> List[Player]:
         """
         :param game_id:
@@ -686,7 +686,9 @@ class GameAccessor(BaseAccessor):
         # get user vk_id
         user_vk_id_list = [user_info["vk_id"] for user_info in users_info]
         # get existed user list by vk_id list
-        existed_user_list: List[User] = await self.app.store.user.get_user_list_by_vk_id_list(
+        existed_user_list: List[
+            User
+        ] = await self.app.store.user.get_user_list_by_vk_id_list(
             vk_id_list=user_vk_id_list
         )
         # get existed user vk_id list by vk_id list
@@ -701,13 +703,18 @@ class GameAccessor(BaseAccessor):
         ]
         # create such users
         if len(not_existed_user_info) != 0:
-            created_user_list: List[User] = await self.app.store.user.create_user_list(
+            created_user_list: List[
+                User
+            ] = await self.app.store.user.create_user_list(
                 user_list=not_existed_user_info
             )
             # get all users together
             existed_user_list.extend(created_user_list)
 
-        player_list: List[Player] = [Player(user_id=user.id, game_id=game_id) for user in existed_user_list]
+        player_list: List[Player] = [
+            Player(user_id=user.id, game_id=game_id)
+            for user in existed_user_list
+        ]
         return await self.create_player_list(player_list=player_list)
 
     async def get_full_game(self, game_id: int) -> GameFull:

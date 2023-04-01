@@ -119,20 +119,21 @@ class VkApiAccessor(BaseAccessor):
             self.logger.info(data)
             self.ts = data["ts"]
             raw_updates = data.get("updates", [])
-            updates = []
-            for update in raw_updates:
-                updates.append(
-                    Update(
-                        type=update["type"],
-                        object=UpdateObject(
-                            id=update["object"]["message"]["id"],
-                            user_id=update["object"]["message"]["from_id"],
-                            peer_id=str(update["object"]["message"]["peer_id"]),
-                            body=update["object"]["message"]["text"],
-                        ),
-                    )
+            return [
+                Update(
+                    type=update["type"],
+                    object=UpdateObject(
+                        id=update["object"]["message"]["id"],
+                        user_id=update["object"]["message"]["from_id"],
+                        message_id=update["object"]["message"][
+                            "conversation_message_id"
+                        ],
+                        peer_id=str(update["object"]["message"]["peer_id"]),
+                        body=update["object"]["message"]["text"],
+                    ),
                 )
-            return updates
+                for update in raw_updates
+            ]
 
     async def get_chat_users(self, chat_id: str):
         """
@@ -146,7 +147,7 @@ class VkApiAccessor(BaseAccessor):
                 params={
                     "access_token": self.app.config.bot.token,
                     "peer_id": chat_id,
-                    "group_id": self.app.config.bot.group_id
+                    "group_id": self.app.config.bot.group_id,
                 },
             )
         ) as resp:
@@ -154,25 +155,25 @@ class VkApiAccessor(BaseAccessor):
             profiles = data["profiles"]
             return profiles
 
-    async def delete_message_from_chat(self, chat_id: str):
+    async def delete_message_from_chat(self, message_ids: str, chat_id: str):
         """
+        :param message_ids:
         :param chat_id:
         :return:
         """
         async with self.session.get(
             self._build_query(
                 host=API_PATH,
-                method="messages.getConversationMembers",
+                method="messages.delete",
                 params={
+                    "message_ids": message_ids,
                     "access_token": self.app.config.bot.token,
                     "peer_id": chat_id,
-                    "group_id": self.app.config.bot.group_id
+                    "group_id": self.app.config.bot.group_id,
                 },
             )
         ) as resp:
-            data = (await resp.json())["response"]
-            profiles = data["profiles"]
-            return profiles
+            self.logger(resp)
 
     async def get_active_chat_id_list(self) -> List[dict]:
         """
@@ -226,3 +227,28 @@ class VkApiAccessor(BaseAccessor):
         ) as resp:
             data = await resp.json()
             self.logger.info(data)
+
+    async def edit_message(
+        self, chat_id: str, message_id: int, message: str
+    ) -> None:
+        """
+        Edit message data
+        :param chat_id: str
+        :param message_id: int
+        :param message: str
+        :return: None
+        """
+        async with self.session.get(
+            self._build_query(
+                host=API_PATH,
+                method="messages.edit",
+                params={
+                    "group_id": self.app.config.bot.group_id,
+                    "access_token": self.app.config.bot.token,
+                    "peer_id": chat_id,
+                    "message_id": message_id,
+                    "message": message,
+                },
+            )
+        ) as resp:
+            self.logger(resp)
