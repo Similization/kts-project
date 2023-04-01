@@ -49,6 +49,7 @@ class Worker:
         :param message: AbstractIncomingMessage
         :return: None
         """
+        await asyncio.sleep(0.5)
         body_to_dict = json.loads(message.body)
         update_object_dict = body_to_dict["object"]
         update_object = UpdateObject(
@@ -85,5 +86,6 @@ class Worker:
         :return: None
         """
         for task in self._tasks:
-            await task
+            task.cancel()
         await self.connection.close()
+

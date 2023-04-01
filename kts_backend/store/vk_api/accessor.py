@@ -49,13 +49,15 @@ class VkApiAccessor(BaseAccessor):
         self.logger.info("start workers")
         await self.worker.start()
 
-    async def disconnect(self, app: "Application"):
+    async def disconnect(self, app: "Application") -> None:
         """
-        :param app:
-        :return:
+        :param app:Application
+        :return: None
         """
         if self.poller:
             await self.poller.stop()
+        if self.worker:
+            await self.worker.stop()
         if self.session:
             await self.session.close()
 
@@ -70,6 +72,9 @@ class VkApiAccessor(BaseAccessor):
         url = host + method + "?"
         if "v" not in params:
             params["v"] = "5.131"
+        param_list: List[str] = []
+        for k, v in params.items():
+            param_list.append(f"{k}={v}")
         url += "&".join([f"{k}={v}" for k, v in params.items()])
         return url
 
@@ -139,8 +144,29 @@ class VkApiAccessor(BaseAccessor):
                 host=API_PATH,
                 method="messages.getConversationMembers",
                 params={
-                    "peer_id": chat_id,
                     "access_token": self.app.config.bot.token,
+                    "peer_id": chat_id,
+                    "group_id": self.app.config.bot.group_id
+                },
+            )
+        ) as resp:
+            data = (await resp.json())["response"]
+            profiles = data["profiles"]
+            return profiles
+
+    async def delete_message_from_chat(self, chat_id: str):
+        """
+        :param chat_id:
+        :return:
+        """
+        async with self.session.get(
+            self._build_query(
+                host=API_PATH,
+                method="messages.getConversationMembers",
+                params={
+                    "access_token": self.app.config.bot.token,
+                    "peer_id": chat_id,
+                    "group_id": self.app.config.bot.group_id
                 },
             )
         ) as resp:
@@ -186,6 +212,7 @@ class VkApiAccessor(BaseAccessor):
         }
         if keyboard:
             params["keyboard"] = keyboard
+
         if int(message.peer_id) > 2000000000:
             params["chat_id"] = int(message.peer_id) - 2000000000
         else:

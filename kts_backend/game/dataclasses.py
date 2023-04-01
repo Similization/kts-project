@@ -7,12 +7,12 @@ from kts_backend.user.dataclasses import User
 
 @dataclass(slots=True)
 class Player:
-    id: int
     user_id: int
     game_id: int
-    score: int
-    is_winner: bool | None
-    in_game: bool
+    id: int | None = None
+    score: int | None = None
+    is_winner: bool | None = None
+    in_game: bool | None = None
 
 
 @dataclass(slots=True)
@@ -30,7 +30,7 @@ class Game:
     created_at: datetime
     finished_at: datetime
 
-    chat_id: int
+    chat_id: str
     chat_message_id: int | None
 
     guessed_word: str
@@ -58,7 +58,7 @@ class GameFull:
     created_at: datetime
     finished_at: datetime
 
-    chat_id: int
+    chat_id: str
     chat_message_id: int | None
 
     guessed_word: str

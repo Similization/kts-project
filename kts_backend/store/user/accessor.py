@@ -37,6 +37,7 @@ class UserAccessor(BaseAccessor):
         :param user_model_list: List[UserModel]
         :return: List[User]
         """
+        print(user_model_list)
         return [
             UserAccessor.user_model2user(user_model=user_model)
             for user_model in user_model_list
@@ -121,6 +122,21 @@ class UserAccessor(BaseAccessor):
             if user_model:
                 return self.user_model2user(user_model=user_model)
             return None
+
+    async def get_user_list_by_vk_id_list(self, vk_id_list: List[str]) -> List[User]:
+        """
+        Get User object list from database by vk_id list
+        :param vk_id_list: List[str]
+        :return: List[User]
+        """
+        statement = select(UserModel).where(UserModel.vk_id.in_(vk_id_list))
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+            user_model_list: List[UserModel] | None = res.scalars()
+            print(user_model_list)
+            if user_model_list:
+                return self.user_model_list2user_list(user_model_list=user_model_list)
+            return []
 
     async def create_user(self, user: List[dict] | dict) -> List[User] | User:
         """

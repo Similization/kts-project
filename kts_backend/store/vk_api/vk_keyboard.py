@@ -1,7 +1,7 @@
 import json
 from copy import deepcopy
-from dataclasses import dataclass
 from typing import List
+from dataclasses import dataclass
 
 from kts_backend.store.vk_api.vk_button import (
     VkButton,
@@ -11,7 +11,7 @@ from kts_backend.store.vk_api.vk_button import (
 )
 
 
-@dataclass(slots=True)
+@dataclass
 class VkKeyboard:
     def __init__(
         self,
@@ -47,16 +47,15 @@ class VkKeyboard:
             "utf-8"
         )
         keyboard: str = str(keyboard.decode("utf-8"))
-
         return keyboard
 
 
 KEYBOARD_CREATE = VkKeyboard(
     one_time=True, inline=False, buttons=[[CREATE_GAME_BUTTON]]
-)
+).convert_to_string()
 KEYBOARD_JOIN = VkKeyboard(
     one_time=True, inline=False, buttons=[[JOIN_GAME_BUTTON]]
-)
+).convert_to_string()
 KEYBOARD_FINISH = VkKeyboard(
     one_time=True, inline=False, buttons=[[FINISH_GAME_BUTTON]]
-)
+).convert_to_string()

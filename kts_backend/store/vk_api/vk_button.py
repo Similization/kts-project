@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-@dataclass(slots=True)
+@dataclass
 class VkButton:
     def __init__(
         self,
@@ -22,8 +22,8 @@ class VkButton:
         :param label: str | None
         :param hash_: str | None
         """
-        self.type: str = type_
-        self.color: str | None = color
+        self.type: Literal["text", "open link", "callback"] = type_
+        self.color: Literal["primary", "secondary", "negative", "positive"] = color
         self.label: str | None = label
         self.payload: str = payload
         self.hash: str | None = hash_
