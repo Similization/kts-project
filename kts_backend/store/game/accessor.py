@@ -15,7 +15,8 @@ from kts_backend.game.dataclasses import (
     Player,
     Game,
     GameData,
-    GameFull, PlayerFull,
+    GameFull,
+    PlayerFull,
 )
 from kts_backend.user.dataclasses import User
 
