@@ -198,27 +198,43 @@ class BotManager:
             res = await game.check_guess(
                 vk_id=update.object.user_id, guess=update.object.body
             )
-            keyboard = KEYBOARD_FINISH
+            print(game.players[0].user.username)
             if "Игра завершена" in res:
-                await self.finish_game(game)
-                keyboard = None
-            await self.app.store.vk_api.send_message(
-                message=Message(
-                    user_id=update.object.user_id,
-                    peer_id=update.object.peer_id,
-                    text=parse_text(
-                        "Результаты игры:\n"
-                        + "\n".join(
-                            [
-                                f"{i + 1}) {player.user.username}: {player.score}"
-                                for i, player in enumerate(game.players)
-                            ]
-                        )
-                        + f"\n{res}\n"
+                await self.app.store.vk_api.send_message(
+                    message=Message(
+                        user_id=update.object.user_id,
+                        peer_id=update.object.peer_id,
+                        text=parse_text(
+                            "Результаты игры:\n"
+                            + "\n".join(
+                                [
+                                    f"{i + 1}) {player.user.username}: {player.score}"
+                                    for i, player in enumerate(game.players)
+                                ]
+                            )
+                            + f"\n{res}\n"
+                        ),
                     ),
-                ),
-                keyboard=keyboard,
-            )
+                )
+                await self.finish_game(game)
+            else:
+                await self.app.store.vk_api.send_message(
+                    message=Message(
+                        user_id=update.object.user_id,
+                        peer_id=update.object.peer_id,
+                        text=parse_text(
+                            "Результаты игры:\n"
+                            + "\n".join(
+                                [
+                                    f"{i + 1}) {player.user.username}: {player.score}"
+                                    for i, player in enumerate(game.players)
+                                ]
+                            )
+                            + f"\n{res}\n"
+                        ),
+                    ),
+                    keyboard=KEYBOARD_FINISH,
+                )
 
     async def finish_game(self, game: PoleChuDesGame):
         await game.finish()

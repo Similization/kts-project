@@ -131,7 +131,7 @@ class PoleChuDesGame:
                 game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
                 game_result += f"Отгданное слово: {self.guessed_word}\n"
                 game_result += "Игра завершена!\n"
-                await self.app.store.game.update_player(
+                await self.app.store.game.update_one_player_full(
                     player=self.current_player
                 )
                 self.game.finished_at = datetime.utcnow()
@@ -147,7 +147,7 @@ class PoleChuDesGame:
                 game_result = f"Игрок: {self.current_player.user.username} не угадал слово\n"
                 game_result += f"Отгданное слово: {self.guessed_word}\n"
                 self.current_player.in_game = False
-                await self.app.store.game.update_player(
+                await self.app.store.game.update_one_player_full(
                     player=self.current_player
                 )
                 if count_of_active_players == 1:
@@ -175,7 +175,7 @@ class PoleChuDesGame:
                     self.game.finished_at = datetime.utcnow()
                     game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
                     game_result += "Игра завершена!\n"
-                await self.app.store.game.update_player(
+                await self.app.store.game.update_one_player_full(
                     player=self.current_player
                 )
                 self.game.previous_player = self.current_player

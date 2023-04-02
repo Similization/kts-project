@@ -15,7 +15,7 @@ from kts_backend.game.dataclasses import (
     Player,
     Game,
     GameData,
-    GameFull,
+    GameFull, PlayerFull,
 )
 from kts_backend.user.dataclasses import User
 
@@ -140,6 +140,18 @@ class GameAccessor(BaseAccessor):
         :return:
         """
         return asdict(player)
+
+    @staticmethod
+    def player_full2dict(player: PlayerFull) -> dict:
+        """
+        Convert PlayerFull object to dictionary
+        :param player:
+        :return:
+        """
+        player_dict = vars(player)
+        user: User = player_dict.pop("user")
+        player_dict["user_id"] = user.id
+        return player_dict
 
     @staticmethod
     def player_list2dict_list(player_list: List[Player]) -> List[dict]:
@@ -287,6 +299,20 @@ class GameAccessor(BaseAccessor):
             await session.commit()
 
             return self.player_model2player(player_model=player_model)
+
+    async def update_one_player_full(self, player: PlayerFull):
+        """
+        Update Player object in database
+        :param player: Player
+        :return: Player
+        """
+        player_dict = self.player_full2dict(player=player)
+        async with self.app.database.session.begin() as session:
+            await session.execute(
+                update(PlayerModel).filter_by(id=player_dict.pop("id")),
+                player_dict,
+            )
+            await session.commit()
 
     async def update_player_list(
         self, player_list: List[Player]
