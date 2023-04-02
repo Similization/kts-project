@@ -44,9 +44,9 @@ class VkApiAccessor(BaseAccessor):
         self.poller = Poller(store=app.store)
         self.worker = Worker(store=app.store, concurrent_workers=4)
 
-        self.logger.info("start polling")
+        self.logger.info(msg="start polling")
         await self.poller.start()
-        self.logger.info("start workers")
+        self.logger.info(msg="start workers")
         await self.worker.start()
 
     async def disconnect(self, app: "Application") -> None:
@@ -92,12 +92,15 @@ class VkApiAccessor(BaseAccessor):
                 },
             )
         ) as resp:
-            data = (await resp.json())["response"]
-            self.logger.info(data)
-            self.key = data["key"]
-            self.server = data["server"]
-            self.ts = data["ts"]
-            self.logger.info(self.server)
+            if resp.status != 200:
+                self.logger.error(await resp.json())
+            else:
+                data = (await resp.json())["response"]
+                self.logger.info(data)
+                self.key = data["key"]
+                self.server = data["server"]
+                self.ts = data["ts"]
+                self.logger.info(self.server)
 
     async def poll(self) -> List[Update]:
         """
@@ -155,8 +158,37 @@ class VkApiAccessor(BaseAccessor):
             profiles = data["profiles"]
             return profiles
 
-    async def delete_message_from_chat(self, message_ids: str, chat_id: str):
+    async def get_history(self, chat_id: str, count: int = 10):
         """
+        :param count:
+        :param chat_id:
+        :return:
+        """
+        async with self.session.get(
+            self._build_query(
+                host=API_PATH,
+                method="messages.getHistory",
+                params={
+                    "access_token": self.app.config.bot.token,
+                    "count": count,
+                    "peer_id": chat_id,
+                    "group_id": self.app.config.bot.group_id,
+                },
+            )
+        ) as resp:
+            data = await resp.json()
+            self.logger.info(msg=data)
+            items = data["response"]["items"]
+            for item in items:
+                if item["from_id"] == -self.app.config.bot.group_id:
+                    return int(item["conversation_message_id"])
+            return None
+
+    async def delete_message_from_chat(
+        self, message_ids: str, chat_id: str, delete_for_all: bool = True
+    ):
+        """
+        :param delete_for_all:
         :param message_ids:
         :param chat_id:
         :return:
@@ -168,12 +200,14 @@ class VkApiAccessor(BaseAccessor):
                 params={
                     "message_ids": message_ids,
                     "access_token": self.app.config.bot.token,
+                    "delete_for_all": int(delete_for_all),
                     "peer_id": chat_id,
                     "group_id": self.app.config.bot.group_id,
                 },
             )
         ) as resp:
-            self.logger(resp)
+            data = await resp.json()
+            self.logger.info(msg=data)
 
     async def get_active_chat_id_list(self) -> List[dict]:
         """
@@ -226,29 +260,34 @@ class VkApiAccessor(BaseAccessor):
             )
         ) as resp:
             data = await resp.json()
-            self.logger.info(data)
+            self.logger.info(msg=data)
 
     async def edit_message(
-        self, chat_id: str, message_id: int, message: str
+        self, message_id: int, message: Message, keyboard: str | None = None
     ) -> None:
         """
         Edit message data
-        :param chat_id: str
+        :param keyboard:
         :param message_id: int
         :param message: str
         :return: None
         """
+        params = {
+            "group_id": self.app.config.bot.group_id,
+            "access_token": self.app.config.bot.token,
+            "peer_id": message.peer_id,
+            "message_id": str(message_id),
+            "message": message,
+        }
+        if keyboard:
+            params["keyboard"] = keyboard
+
         async with self.session.get(
             self._build_query(
                 host=API_PATH,
                 method="messages.edit",
-                params={
-                    "group_id": self.app.config.bot.group_id,
-                    "access_token": self.app.config.bot.token,
-                    "peer_id": chat_id,
-                    "message_id": message_id,
-                    "message": message,
-                },
+                params=params,
             )
         ) as resp:
-            self.logger(resp)
+            data = await resp.json()
+            self.logger.info(msg=data)

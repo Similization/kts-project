@@ -1,40 +1,67 @@
-FROM ubuntu:latest
+# Stage 1: Base image
+FROM python:3.10-slim-buster AS base
+WORKDIR /app
 
-WORKDIR /kts-project
+# Install PostgreSQL and RabbitMQ
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils \
+    postgresql-client \
+    rabbitmq-server && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt update &&  apt upgrade &&  \
-    apt install software-properties-common -y && \
-    add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt update && \
-    apt install python3.10 -y && \
-    apt install python3.10-dev -y &&  \
-    apt install python3-pip -y && \
-    apt install python3.10-venv -y &&  \
-    # postgres install
-    apt install postgresql postgresql-contrib  &&\
-    # postgres start
-    apt systemctl start postgresql.service &&  \
-    # use psql
-    sudo -u postgres psql &&  \
-    # create password
-    \password postgres && mysecretpassword && mysecretpassword && \
-    # create database
-    create database kts_project && \
-    # grant privileges to user <postgres>
-    grant all privileges on database kts_project to postgres && \
-    # quit from psql
-    \q
-
-
-RUN mkdir kts_project && cd kts_project &&  \
-    python3 -m venv kts_project-env &&  \
-    . ./kts_project-env/bin/activate
-
-RUN pip3 install --upgrade pip
-
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
-
+# Stage 2: Python setup
+FROM base AS python
+WORKDIR /app
+# Set the environment variable for the Python application
+ENV DATABASE_URL=postgresql+asyncpg://postgres:mysecretpassword@localhost/kts_project
+# Install required Python packages
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+# Copy the application code to the container
 COPY . .
 
-CMD [ "python3", "main.py" ]
+
+# Stage 3: PostgreSQL setup
+FROM base AS postgres
+# Update the system and install PostgreSQL
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql && \
+    rm -rf /var/lib/apt/lists/*
+# Start PostgreSQL and set password for 'postgres' user
+RUN service postgresql start && \
+    su - postgres -c "psql --command \"ALTER USER postgres WITH PASSWORD 'mysecretpassword';\"" && \
+    service postgresql stop
+# Create a new PostgreSQL database 'kts_project'
+RUN service postgresql start && \
+    su - postgres -c "createdb kts_project -O postgres" && \
+    service postgresql stop
+
+# Stage 4: Fill the database with data
+FROM postgres AS fill_db
+# Copy the SQL scripts to the container
+COPY etc/sql/create_database.sql /app/create_database.sql
+COPY etc/sql/fill_database.sql /app/fill_database.sql
+# Start PostgreSQL
+RUN service postgresql start && \
+    # Run the SQL script to create tables
+    su - postgres -c "psql -d kts_project -a -f /app/create_database.sql" && \
+    # Run the SQL script to fill tables with data
+    su - postgres -c "psql -d kts_project -a -f /app/fill_database.sql" && \
+    service postgresql stop
+
+
+# Stage 5: RabbitMQ setup
+FROM base AS rabbitmq
+# Start the RabbitMQ server
+RUN service rabbitmq-server start && \
+    rabbitmqctl add_user myuser mypassword && \
+    rabbitmqctl add_vhost myvhost && \
+    rabbitmqctl set_permissions -p myvhost myuser ".*" ".*" ".*" && \
+    service rabbitmq-server stop
+
+# Stage 6: Final image
+FROM python AS final
+# Copy PostgreSQL and RabbitMQ setup from previous stages
+COPY --from=postgres /app /app
+COPY --from=rabbitmq /etc/rabbitmq /etc/rabbitmq
+CMD ["python", "main.py"]

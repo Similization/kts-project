@@ -82,9 +82,9 @@ class UserAccessor(BaseAccessor):
         """
         async with self.app.database.session.begin() as session:
             user_model: UserModel | None = await session.get(UserModel, user_id)
-            if user_model:
-                return self.user_model2user(user_model=user_model)
-            return None
+        if user_model:
+            return self.user_model2user(user_model=user_model)
+        return None
 
     async def get_user_list(self, user_id_list: List[int]) -> List[User] | None:
         """
@@ -101,13 +101,14 @@ class UserAccessor(BaseAccessor):
         statement = select(UserModel).where(UserModel.id.in_(user_id_list))
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement)
-            user_model_seq: Sequence[UserModel] | None = res.scalars().all()
-            user_model_list: List[UserModel] | None = list(user_model_seq)
-            if user_model_list:
-                return self.user_model_list2user_list(
-                    user_model_list=user_model_list
-                )
-            return None
+
+        user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+        user_model_list: List[UserModel] | None = list(user_model_seq)
+        if user_model_list:
+            return self.user_model_list2user_list(
+                user_model_list=user_model_list
+            )
+        return None
 
     async def get_one_user_by_vk_id(self, vk_id: int) -> User | None:
         """
@@ -118,10 +119,10 @@ class UserAccessor(BaseAccessor):
         statement = select(UserModel).filter_by(vk_id=vk_id)
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            user_model: UserModel | None = res.scalar()
-            if user_model:
-                return self.user_model2user(user_model=user_model)
-            return None
+        user_model: UserModel | None = res.scalar()
+        if user_model:
+            return self.user_model2user(user_model=user_model)
+        return None
 
     async def get_user_list_by_vk_id_list(
         self, vk_id_list: List[str]
@@ -134,13 +135,13 @@ class UserAccessor(BaseAccessor):
         statement = select(UserModel).where(UserModel.vk_id.in_(vk_id_list))
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            user_model_list: List[UserModel] | None = res.scalars()
-            print(user_model_list)
-            if user_model_list:
-                return self.user_model_list2user_list(
-                    user_model_list=user_model_list
-                )
-            return []
+        user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+        user_model_list: List[UserModel] | None = list(user_model_seq)
+        if user_model_list:
+            return self.user_model_list2user_list(
+                user_model_list=user_model_list
+            )
+        return []
 
     async def create_user(self, user: List[dict] | dict) -> List[User] | User:
         """
@@ -168,10 +169,10 @@ class UserAccessor(BaseAccessor):
             res = await session.execute(
                 insert(UserModel).returning(UserModel), user
             )
-            user_model: UserModel | None = res.scalar()
             await session.commit()
 
-            return self.user_model2user(user_model=user_model)
+        user_model: UserModel | None = res.scalar()
+        return self.user_model2user(user_model=user_model)
 
     async def create_user_list(self, user_list: List[dict]) -> List[User]:
         """
@@ -190,13 +191,11 @@ class UserAccessor(BaseAccessor):
             res = await session.execute(
                 insert(UserModel).returning(UserModel), user_list
             )
-            user_model_seq: Sequence[UserModel] | None = res.scalars().all()
-            user_model_list: List[UserModel] | None = list(user_model_seq)
             await session.commit()
+        user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+        user_model_list: List[UserModel] | None = list(user_model_seq)
 
-            return self.user_model_list2user_list(
-                user_model_list=user_model_list
-            )
+        return self.user_model_list2user_list(user_model_list=user_model_list)
 
     async def update_user(self, user: List[dict] | dict) -> List[User] | User:
         """
@@ -227,10 +226,10 @@ class UserAccessor(BaseAccessor):
                 update(UserModel).filter_by(id=user_id).returning(UserModel),
                 user,
             )
-            user_model: UserModel | None = res.scalar()
             await session.commit()
+        user_model: UserModel | None = res.scalar()
 
-            return self.user_model2user(user_model=user_model)
+        return self.user_model2user(user_model=user_model)
 
     async def update_user_list(self, user_list: List[dict]) -> List[User]:
         """
@@ -240,26 +239,26 @@ class UserAccessor(BaseAccessor):
         :return:
         """
         # TODO: var 1
-        result_list = []
-        for user in user_list:
-            result_list.append(await self.update_one_user(user=user))
-        return result_list
-        # TODO: var 2
-        # user_id_list = []
+        # result_list = []
         # for user in user_list:
-        #     user_id_list.append(user.pop("user_id"))
-        #
-        # async with self.app.database.session.begin() as session:
-        #     res = await session.execute(
-        #         update(UserModel).where(UserModel.user_id.in_(user_id_list)).returning(UserModel),
-        #         user_list
-        #     )
-        #     user_model_list: Optional[List[UserModel]] = res.scalars()
-        #     await session.commit()
-        #
-        #     return self.user_model_list2user_list(
-        #         user_model_list=user_model_list
-        #     )
+        #     result_list.append(await self.update_one_user(user=user))
+        # return result_list
+        # TODO: var 2
+        user_id_list = []
+        for user in user_list:
+            user_id_list.append(user.pop("user_id"))
+        statement = (
+            update(UserModel)
+            .where(UserModel.user_id.in_(user_id_list))
+            .returning(UserModel)
+        )
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement, user_list)
+        user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+        user_model_list: List[UserModel] | None = list(user_model_seq)
+        await session.commit()
+
+        return self.user_model_list2user_list(user_model_list=user_model_list)
 
     async def create_or_update_user(
         self, user: List[dict] | dict
@@ -311,7 +310,7 @@ class UserAccessor(BaseAccessor):
                 await session.delete(user_model)
             await session.commit()
 
-            return self.user_model2user(user_model=user_model)
+        return self.user_model2user(user_model=user_model)
 
     async def delete_user_list(self, user_id_list: List[int]) -> List[User]:
         """
@@ -332,10 +331,8 @@ class UserAccessor(BaseAccessor):
         )
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            user_model_seq: Sequence[UserModel] | None = res.scalars().all()
-            user_model_list: List[UserModel] | None = list(user_model_seq)
             await session.commit()
+        user_model_seq: Sequence[UserModel] | None = res.scalars().all()
+        user_model_list: List[UserModel] | None = list(user_model_seq)
 
-            return self.user_model_list2user_list(
-                user_model_list=user_model_list
-            )
+        return self.user_model_list2user_list(user_model_list=user_model_list)

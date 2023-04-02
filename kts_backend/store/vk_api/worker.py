@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import List
 
-from aio_pika import connect
+from aio_pika import connect, exceptions
 from aio_pika.abc import (
     AbstractChannel,
     AbstractQueue,
@@ -21,18 +21,29 @@ class Worker:
         :param store: Store
         :param concurrent_workers: int
         """
-        self.store = store
+        self.store: Store = store
         self.connection: AbstractConnection | None = None
         self.channel: AbstractChannel | None = None
         self.queue: AbstractQueue | None = None
         self.concurrent_workers = concurrent_workers
         self._tasks: List[asyncio.Task] = []
 
-    async def start(self) -> None:
+    async def start(self, retry_delay: int = 5) -> None:
         """
+        Set up message queue connection and start worker tasks
         :return: None
         """
-        self.connection = await connect(host="localhost", port=5672)
+        while True:
+            try:
+                self.connection = await connect(host="localhost", port=5672)
+                break
+            except exceptions.AMQPConnectionError:
+                print(
+                    "Connection to message queue failed, retrying in 5 seconds..."
+                )
+                await asyncio.sleep(retry_delay)
+
+        await self.store.bots_manager.start()
         async with self.connection:
             self.channel: AbstractChannel = await self.connection.channel()
             self.queue: AbstractQueue = await self.channel.declare_queue(
@@ -46,27 +57,28 @@ class Worker:
 
     async def callback(self, message: AbstractIncomingMessage) -> None:
         """
-        :param message: AbstractIncomingMessage
+        Process message received from message queue
+        :param message: IncomingMessage
         :return: None
         """
-        await asyncio.sleep(0.1)
         body_to_dict = json.loads(message.body)
         update_object_dict = body_to_dict["object"]
         update_object = UpdateObject(
             id=update_object_dict["id"],
             user_id=update_object_dict["user_id"],
+            message_id=update_object_dict["message_id"],
             peer_id=update_object_dict["peer_id"],
             body=update_object_dict["body"],
         )
         update = Update(type=body_to_dict["type"], object=update_object)
-        await asyncio.sleep(1)
         await self.handle_update(updates=update)
 
     async def handle_update(
         self, updates: List[Update] | Update | None
     ) -> None:
         """
-        :param updates: List[Update] | Update | None
+        Handle updates received from message queue
+        :param updates: List[Update]
         :return: None
         """
         await self.store.bots_manager.handle_updates(updates=updates)
@@ -85,3 +97,29 @@ class Worker:
         for task in self._tasks:
             task.cancel()
         await self.connection.close()
+
+
+# async def main() -> None:
+#     # Perform connection
+#     connection = await connect("amqp://guest:guest@localhost/")
+#
+#     async with connection:
+#         # Creating a channel
+#         channel = await connection.channel()
+#         await channel.set_qos(prefetch_count=1)
+#
+#         # Declaring queue
+#         queue = await channel.declare_queue(
+#             "task_queue",
+#             durable=True,
+#         )
+#
+#         # Start listening the queue with name 'task_queue'
+#         await queue.consume(on_message)
+#
+#         print(" [*] Waiting for messages. To exit press CTRL+C")
+#         await asyncio.Future()
+#
+#
+# if __name__ == "__main__":
+#     asyncio.run(main())

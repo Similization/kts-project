@@ -20,6 +20,7 @@ class BotConfig:
 
 @dataclass(slots=True)
 class DatabaseConfig:
+    type: str
     host: str
     port: int
     user: str

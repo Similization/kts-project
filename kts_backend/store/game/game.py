@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from random import randint, choice
 from typing import List, Set
@@ -17,6 +18,7 @@ class PoleChuDesGame:
         :param app: Application
         """
         self.app = app
+        self.logger = logging.getLogger("game")
         self.game: GameFull | None = None
         self.players: List[PlayerFull] = list()
         self.current_player: PlayerFull | None = None
@@ -118,7 +120,9 @@ class PoleChuDesGame:
         if len(guess) > 1 or count_of_active_players == 1:
             # угадал слово
             if self.check_answer(answer=guess):
-                print("GUESS1")
+                self.logger.debug(
+                    f"{self.current_player.user.username} guessed a word"
+                )
                 generated_points: int = self.generate_points()
                 self.current_player.score += generated_points
                 game_result = f"Игрок: {self.current_player.user.username} получает {generated_points} очко(ов)\n"
@@ -136,7 +140,9 @@ class PoleChuDesGame:
                 return game_result
             # не угадал слово
             else:
-                print("GUESS2")
+                self.logger.debug(
+                    f"{self.current_player.user.username} didn't guess a word"
+                )
                 self.current_player.in_game = False
                 game_result = f"Игрок: {self.current_player.user.username} не угадал слово\n"
                 game_result += f"Отгданное слово: {self.guessed_word}\n"
@@ -156,26 +162,30 @@ class PoleChuDesGame:
         else:
             # угадал букву
             if await self.guess_letter_result(letter=guess):
-                print("GUESS3")
+                self.logger.debug(
+                    f"{self.current_player.user.username} guessed letter"
+                )
                 generated_points: int = self.generate_points()
                 self.current_player.score += generated_points
                 game_result += f"Игрок: {self.current_player.user.username} получает {generated_points} очко(ов)\n"
-                game_result += f"Отгданное слово: {self.guessed_word}\n"
+                game_result += f"Отгаданное слово: {self.guessed_word}\n"
                 # угадал слово
                 if self.check_answer(answer=self.guessed_word):
                     self.current_player.is_winner = True
-                    await self.app.store.game.update_player(
-                        player=self.current_player
-                    )
                     self.game.finished_at = datetime.utcnow()
                     game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
                     game_result += "Игра завершена!\n"
+                await self.app.store.game.update_player(
+                    player=self.current_player
+                )
                 self.game.previous_player = self.current_player
                 await self.app.store.game.update_game(game=self.game)
                 return game_result
             # не угадал букву
             else:
-                print("GUESS4")
+                self.logger.debug(
+                    f"{self.current_player.user.username} didn't guess letter"
+                )
                 game_result += f"Игрок: {self.current_player.user.username} не угадал букву(\n"
                 game_result += f"Отгданное слово: {self.guessed_word}\n"
                 await self.next_player()
@@ -197,6 +207,11 @@ class PoleChuDesGame:
             return True
         return False
 
+    async def finish(self):
+        self.game.finished_at = datetime.utcnow()
+        self.game.previous_player = self.current_player
+        await self.app.store.game.update_game(game=self.game)
+
     @staticmethod
     def check_letter(letter: str) -> bool:
         """
@@ -204,7 +219,7 @@ class PoleChuDesGame:
         :param letter: str
         :return: bool
         """
-        return len(letter) == 1 and ("a" <= letter.lower() <= "z")
+        return len(letter) == 1 and letter.isalpha()
 
     async def add_points(self, player_id: int) -> None:
         """

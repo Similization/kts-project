@@ -4,4 +4,6 @@ include
 lib
 pyenv.cfg
 
+alembic
+
 own_tests

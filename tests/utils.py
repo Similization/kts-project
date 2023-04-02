@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 def ok_response(data: dict) -> dict:
     """
-    Ok response
+    Response if no error occurs
     :param data: dict
     :return: dict
     """
@@ -16,7 +16,7 @@ def ok_response(data: dict) -> dict:
 
 def error_response(status: str, message: str, data: dict) -> dict:
     """
-    Error response
+    Response in case of errors
     :param status: str
     :param message: str
     :param data: dict

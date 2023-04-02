@@ -20,7 +20,7 @@ class AdminLoginView(View):
         :return: Response
         """
         data: dict = self.request["data"]
-        admin: Optional[Admin] = await self.store.admin.get_admin_by_email(
+        admin: Optional[Admin] = await self.store.admin.get_by_email(
             email=data["email"]
         )
         if admin is None or not admin.is_password_valid(data["password"]):

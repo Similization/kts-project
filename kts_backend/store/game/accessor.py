@@ -736,3 +736,40 @@ class GameAccessor(BaseAccessor):
             game_model: GameModel | None = res.scalar()
 
         return self.game_model2game_full(game_model=game_model)
+
+    async def update_player_and_game(
+        self, game: GameFull, player: Player
+    ) -> None:
+        """
+        Update the GameModel and PlayerModel with the provided game and player objects.
+        """
+        game_statement = (
+            update(GameModel)
+            .filter_by(id=game.id)
+            .values(
+                finished_at=game.finished_at,
+                previous_player_id=game.previous_player.id,
+            )
+        )
+        player_statement = (
+            update(PlayerModel)
+            .filter_by(id=player.id)
+            .values(**self.player2dict(player=player))
+        )
+        async with self.app.database.session.begin() as session:
+            await session.execute(game_statement)
+            await session.execute(player_statement)
+
+    async def update_game_message_id(self, game_id: int, message_id: int):
+        """
+        :param game_id:
+        :param message_id:
+        :return:
+        """
+        statement = (
+            update(GameModel)
+            .filter_by(id=game_id)
+            .values(chat_message_id=message_id)
+        )
+        async with self.app.database.session.begin() as session:
+            await session.execute(statement=statement)

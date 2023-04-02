@@ -18,7 +18,6 @@ from kts_backend.web.config import setup_config, Config
 from kts_backend.web.logger import setup_logging
 from kts_backend.web.middlewares import setup_middlewares
 from kts_backend.web.route import setup_routes
-from kts_backend.web.urls import register_urls
 
 
 class Application(AiohttpApplication):
@@ -90,7 +89,6 @@ def setup_app(config: dict) -> Application:
         app, title="Vk Bot", url="/docs/json", swagger_path="/docs"
     )
     setup_routes(app=app)
-    register_urls(app=app, cors=cors)
     setup_middlewares(app=app)
     setup_store(app=app)
     return app

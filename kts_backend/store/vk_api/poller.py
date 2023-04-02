@@ -9,7 +9,7 @@ from aio_pika import Message, connect
 from aio_pika.abc import AbstractChannel, AbstractQueue, AbstractConnection
 
 from kts_backend.store import Store
-from kts_backend.store.bot.dataclasses import Update
+from kts_backend.store.vk_api.dataclasses import Update
 
 QUEUE_NAME = "POLLER"
 
@@ -55,9 +55,8 @@ class Poller:
         while self.is_running:
             updates: List[Update] = await self.store.vk_api.poll()
             for update in updates:
-                print(update)
                 await self.channel.default_exchange.publish(
                     Message(json.dumps(asdict(update)).encode(), user_id=None),
                     routing_key=self.queue.name,
                 )
-                logging.basicConfig(level=logging.INFO)
+            logging.basicConfig(level=logging.DEBUG)

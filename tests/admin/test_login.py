@@ -18,7 +18,7 @@ class TestAdminLoginView:
         :param config:
         :return:
         """
-        admin = await store.admin.get_admin_by_email(email=config.admin.email)
+        admin = await store.admin.get_by_email(email=config.admin.email)
         assert admin is not None
         assert admin.email == config.admin.email
         assert admin.password != config.admin.password

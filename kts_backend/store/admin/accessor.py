@@ -31,7 +31,7 @@ class AdminAccessor(BaseAccessor):
         """
         return asdict(admin)
 
-    async def get_admin_by_email(self, email: str) -> Admin | None:
+    async def get_by_email(self, email: str) -> Admin | None:
         """
         Get Admin object from database, otherwise return None
         :param email: str
@@ -46,7 +46,7 @@ class AdminAccessor(BaseAccessor):
                 return self.admin_model2admin(admin_model=admin_model)
             return None
 
-    async def create_admin(self, email: str, password: str) -> Admin:
+    async def get_or_create(self, email: str, password: str) -> Admin:
         """
         Create Admin object in database and return it if it does not exist,
         otherwise return existed one
@@ -54,7 +54,7 @@ class AdminAccessor(BaseAccessor):
         :param password: str
         :return: Admin
         """
-        admin: Admin | None = await self.get_admin_by_email(email=email)
+        admin: Admin | None = await self.get_by_email(email=email)
         if admin is not None:
             return admin
 
@@ -67,13 +67,10 @@ class AdminAccessor(BaseAccessor):
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
             admin_model: AdminModel | None = res.scalar()
-            await session.commit()
         return self.admin_model2admin(admin_model=admin_model)
 
     async def update_admin(self):
         raise NotImplementedError
-        pass
 
     async def delete_admin(self):
         raise NotImplementedError
-        pass

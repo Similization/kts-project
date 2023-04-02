@@ -218,7 +218,7 @@ async def game_1(db_session: AsyncSession, game_data_1: GameData) -> Game:
     :return:
     """
     game_data_id = game_data_1.id
-    chat_id = 1
+    chat_id: str = "1"
     chat_message_id = 200
 
     new_game = GameModel(
@@ -259,7 +259,7 @@ async def game_2(
         "2023-02-22 12:45:00.000000",
         "%Y-%m-%d %H:%M:%S.%f",
     )
-    chat_id = 1
+    chat_id: str = "1"
     chat_message_id = 200
 
     new_game = GameModel(
@@ -300,7 +300,7 @@ async def game_3(
     :return:
     """
     game_data_id = game_data_3.id
-    chat_id = 2
+    chat_id: str = "2"
 
     new_game = GameModel(game_data_id=game_data_id, chat_id=chat_id)
 

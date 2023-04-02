@@ -1,4 +1,4 @@
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import (
@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
 )
-from sqlalchemy.orm import declarative_base
 
 from kts_backend.store.database.sqlalchemy_base import db
 
@@ -22,9 +21,9 @@ class Database:
         :param app: Application
         """
         self.app: Application = app
-        self._engine: Optional[AsyncEngine] = None
-        self._db: Optional[declarative_base] = None
-        self.session: Optional[async_sessionmaker] = None
+        self._engine: AsyncEngine | None = None
+        self._db: Any = None
+        self.session: async_sessionmaker | None = None
 
     async def connect(self, *_: list, **__: dict) -> None:
         """
@@ -48,10 +47,11 @@ class Database:
             bind=self._engine, expire_on_commit=False, class_=AsyncSession
         )
         # TODO: disabled for tests/enabled for run
-        # await self.app.store.admin.create_admin(
-        #     email=self.app.config.admin.email,
-        #     password=self.app.config.admin.password,
-        # )
+        if self.app.config.database.type != "test":
+            await self.app.store.admin.get_or_create(
+                email=self.app.config.admin.email,
+                password=self.app.config.admin.password,
+            )
 
     async def disconnect(self, *_: list, **__: dict) -> None:
         """
