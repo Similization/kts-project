@@ -1,56 +1,35 @@
 import typing
-from dataclasses import dataclass
+
+from kts_backend.web.dataclasses import (
+    Config,
+    AdminConfig,
+    BotConfig,
+    DatabaseConfig,
+    SessionConfig,
+)
 
 if typing.TYPE_CHECKING:
     from kts_backend.web.app import Application
 
 
-@dataclass
-class SessionConfig:
-    key: str
-
-
-# @dataclass
-# class AdminConfig:
-#     email: str
-#     password: str
-
-
-@dataclass
-class BotConfig:
-    token: str
-    group_id: int
-
-
-@dataclass
-class DatabaseConfig:
-    host: str
-    port: int
-    user: str
-    password: str
-    database: str
-
-
-@dataclass
-class Config:
-    # admin: AdminConfig
-    session: SessionConfig = None
-    bot: BotConfig = None
-    database: DatabaseConfig = None
-
-
-def setup_config(app: "Application", config: dict):
+def setup_config(app: "Application", config: dict) -> None:
+    """
+    Setup application configuration
+    :param app: Application
+    :param config: dict
+    :return: None
+    """
     app.config = Config(
-        session=SessionConfig(
-            key=config["session"]["key"],
+        admin=AdminConfig(
+            email=config["admin"]["email"],
+            password=config["admin"]["password"],
         ),
-        # admin=AdminConfig(
-        #     email=raw_config["admin"]["email"],
-        #     password=raw_config["admin"]["password"],
-        # ),
         bot=BotConfig(
             token=config["bot"]["key"],
             group_id=config["bot"]["group_id"],
         ),
         database=DatabaseConfig(**config["database"]),
+        session=SessionConfig(
+            key=config["session"]["key"],
+        ),
     )

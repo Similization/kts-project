@@ -1,66 +1,94 @@
-from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import Integer, VARCHAR, Column, TIMESTAMP, ForeignKey
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
-from sqlalchemy.orm import relationship
+from sqlalchemy import (
+    Integer,
+    VARCHAR,
+    Column,
+    TIMESTAMP,
+    ForeignKey,
+    BOOLEAN,
+    SmallInteger,
+)
 
 from kts_backend.store.database.sqlalchemy_base import db
-
-
-# class GameScoreDC:
-#     points: int
-
-
-@dataclass
-class PlayerDC:
-    vk_id: int
-    name: str
-    last_name: str
-
-
-@dataclass
-class GameDC:
-    game_id: int
-    created_at: datetime
-    chat_id: int
-
-    players: list[PlayerDC]
-
-
-# class GameScoreModel(db):
-#     __tablename__ = "game_score"
-#
-#     points = Column(Integer, nullable=False)
+from kts_backend.user.model import UserModel
 
 
 class PlayerModel(db):
     __tablename__ = "player"
 
-    vk_id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(VARCHAR(45), nullable=False)
-    last_name = Column(VARCHAR(45), nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", use_alter=False, ondelete="CASCADE"),
+        nullable=False,
+    )
+    user: Mapped["UserModel"] = relationship(
+        foreign_keys=[user_id], backref="player", lazy="subquery"
+    )
+
+    game_id: Mapped[int] = mapped_column(
+        ForeignKey("game.id", use_alter=False, ondelete="CASCADE"),
+        nullable=False,
+    )
+    game: Mapped["GameModel"] = relationship(
+        back_populates="player_list", foreign_keys=[game_id], lazy="subquery"
+    )
+
+    score = Column(Integer, nullable=False, default=0)
+    is_winner = Column(BOOLEAN, default=False, nullable=False)
+    in_game = Column(BOOLEAN, default=True)
 
 
-class PlayerGameScoreModel(db):
-    __tablename__ = "player_game_score"
+class GameDataModel(db):
+    __tablename__ = "game_data"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    vk_id = Column(
-        Integer, ForeignKey("player.vk_id", ondelete="CASCADE"), nullable=False
-    )
-    game_id = Column(
-        Integer, ForeignKey("game.game_id", ondelete="CASCADE"), nullable=False
-    )
-    score = Column(Integer, nullable=False, default=0)
+    question = Column(VARCHAR(300), nullable=False, unique=True)
+    answer = Column(VARCHAR(30), nullable=False, unique=False)
 
 
 class GameModel(db):
     __tablename__ = "game"
 
-    game_id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(TIMESTAMP, default=datetime.utcnow)
-    chat_id = Column(Integer, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # players: List["PlayerModel"] = relationship("PlayerModel", cascade="all,delete", backref="game")
+    game_data_id: Mapped[int] = mapped_column(
+        ForeignKey("game_data.id", use_alter=False, ondelete="SET NULL"),
+        nullable=False,
+    )
+    game_data: Mapped["GameDataModel"] = relationship(
+        cascade="all,delete",
+        foreign_keys=[game_data_id],
+        backref="data_game",
+        lazy="subquery",
+    )
+
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+    finished_at = Column(TIMESTAMP, nullable=True, default=None)
+
+    chat_id = Column(VARCHAR(15), nullable=False)
+    chat_message_id = Column(Integer, nullable=True, default=None)
+
+    guessed_word = Column(VARCHAR(30), nullable=False, default="")
+    required_player_count = Column(SmallInteger, nullable=False, default=3)
+
+    previous_player_id: Mapped[int] = mapped_column(
+        ForeignKey("player.id", use_alter=True, ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+    )
+    previous_player: Mapped["PlayerModel"] = relationship(
+        foreign_keys=[previous_player_id],
+        lazy="subquery",
+    )
+
+    player_list: Mapped[List["PlayerModel"]] = relationship(
+        back_populates="game",
+        cascade="all,delete",
+        primaryjoin="(GameModel.id==PlayerModel.game_id)",
+        lazy="subquery",
+    )

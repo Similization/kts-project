@@ -333,5 +333,7 @@ pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,macos,pycharm,venv
 
+# my files
 bin
 .idea
+own_tests
