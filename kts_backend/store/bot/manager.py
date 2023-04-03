@@ -171,6 +171,10 @@ class BotManager:
                     game_id=created_game.id,
                     message_id=new_pole_game.game.chat_message_id,
                 )
+                await self.app.store.vk_api.pin_message(
+                    message_id=new_pole_game.game.chat_message_id,
+                    peer_id=update.object.peer_id,
+                )
             else:
                 await self.app.store.vk_api.send_message(
                     message=Message(
@@ -180,11 +184,11 @@ class BotManager:
                     )
                 )
         else:
+            results = [
+                f"{i + 1}) {player.user.username}: {player.score}"
+                for i, player in enumerate(game.game.player_list)
+            ]
             if update.object.body.find(PARSE_COMMANDS["finish"]) != -1:
-                results = [
-                    f"{i + 1}) {player.user.username}: {player.score}"
-                    for i, player in enumerate(game.players)
-                ]
                 result_string = "Результаты игры:\n" + "\n".join(results) + "\n"
                 await self.app.store.vk_api.send_message(
                     message=Message(
@@ -195,46 +199,27 @@ class BotManager:
                 )
                 await self.finish_game(game)
                 return
+
             res = await game.check_guess(
                 vk_id=update.object.user_id, guess=update.object.body
             )
-            print(game.players[0].user.username)
+            result_string = (
+                "Результаты игры:\n" + "\n".join(results) + f"\n{res}\n"
+            )
+            keyboard = KEYBOARD_FINISH
+
             if "Игра завершена" in res:
-                await self.app.store.vk_api.send_message(
-                    message=Message(
-                        user_id=update.object.user_id,
-                        peer_id=update.object.peer_id,
-                        text=parse_text(
-                            "Результаты игры:\n"
-                            + "\n".join(
-                                [
-                                    f"{i + 1}) {player.user.username}: {player.score}"
-                                    for i, player in enumerate(game.players)
-                                ]
-                            )
-                            + f"\n{res}\n"
-                        ),
-                    ),
-                )
                 await self.finish_game(game)
-            else:
-                await self.app.store.vk_api.send_message(
-                    message=Message(
-                        user_id=update.object.user_id,
-                        peer_id=update.object.peer_id,
-                        text=parse_text(
-                            "Результаты игры:\n"
-                            + "\n".join(
-                                [
-                                    f"{i + 1}) {player.user.username}: {player.score}"
-                                    for i, player in enumerate(game.players)
-                                ]
-                            )
-                            + f"\n{res}\n"
-                        ),
-                    ),
-                    keyboard=KEYBOARD_FINISH,
-                )
+                keyboard = None
+
+            await self.app.store.vk_api.send_message(
+                message=Message(
+                    user_id=update.object.user_id,
+                    peer_id=update.object.peer_id,
+                    text=parse_text(text=result_string),
+                ),
+                keyboard=keyboard,
+            )
 
     async def finish_game(self, game: PoleChuDesGame):
         await game.finish()

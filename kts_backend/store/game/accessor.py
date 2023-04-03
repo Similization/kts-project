@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Sequence
 
 from sqlalchemy import select, update, delete, insert, func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, subqueryload
 
 from kts_backend.base.base_accessor import BaseAccessor
 from kts_backend.game.model import (
@@ -18,17 +18,20 @@ from kts_backend.game.dataclasses import (
     GameFull,
     PlayerFull,
 )
+from kts_backend.store.user.accessor import UserAccessor
 from kts_backend.user.dataclasses import User
 
 
 class GameAccessor(BaseAccessor):
     @staticmethod
-    def player_model2player(player_model: PlayerModel) -> Player:
+    def player_model2player(player_model: PlayerModel | None) -> Player | None:
         """
         Convert PlayerModel object to Player object
         :param player_model: PlayerModel
         :return: Player
         """
+        if player_model is None:
+            return None
         return Player(
             id=player_model.id,
             user_id=player_model.user_id,
@@ -37,6 +40,35 @@ class GameAccessor(BaseAccessor):
             in_game=player_model.in_game,
             is_winner=player_model.is_winner,
         )
+
+    @staticmethod
+    def player_model2player_full(player_model: PlayerModel) -> PlayerFull:
+        """
+        :param player_model: PlayerModel
+        :return: PlayerFull
+        """
+        print(player_model)
+        return PlayerFull(
+            id=player_model.id,
+            user=UserAccessor.user_model2user(player_model.user),
+            game=GameAccessor.game_model2game(player_model.game),
+            score=player_model.score,
+            in_game=player_model.in_game,
+            is_winner=player_model.is_winner,
+        )
+
+    @staticmethod
+    def player_model_list2player_full_list(
+        player_model_list: List[PlayerModel],
+    ) -> List[PlayerFull]:
+        """
+        :param player_model_list: List[PlayerModel]
+        :return: List[PlayerFull]
+        """
+        return [
+            GameAccessor.player_model2player_full(player_model=player_model)
+            for player_model in player_model_list
+        ]
 
     @staticmethod
     def player_model_list2player_list(
@@ -54,15 +86,18 @@ class GameAccessor(BaseAccessor):
 
     @staticmethod
     def game_model2game(
-        game_model: GameModel,
+        game_model: GameModel | None,
         player_list: List[Player] | List[PlayerModel] | None = None,
-    ) -> Game:
+    ) -> Game | None:
         """
         Convert GameModel object to Game
         :param game_model: GameModel
         :param player_list: List[Player] | List[PlayerModel]
         :return: Game
         """
+        if game_model is None:
+            return None
+
         if player_list is None:
             player_list = []
 
@@ -122,15 +157,21 @@ class GameAccessor(BaseAccessor):
         """
         return GameFull(
             id=game_model.id,
-            game_data=game_model.game_data,
+            game_data=GameAccessor.game_data_model2game_data(
+                game_model.game_data
+            ),
             created_at=game_model.created_at,
             finished_at=game_model.finished_at,
             chat_id=game_model.chat_id,
             chat_message_id=game_model.chat_message_id,
             guessed_word=game_model.guessed_word,
             required_player_count=game_model.required_player_count,
-            previous_player=game_model.previous_player,
-            player_list=game_model.player_list,
+            previous_player=GameAccessor.player_model2player(
+                game_model.previous_player
+            ),
+            player_list=GameAccessor.player_model_list2player_full_list(
+                game_model.player_list
+            ),
         )
 
     @staticmethod
@@ -149,7 +190,7 @@ class GameAccessor(BaseAccessor):
         :param player:
         :return:
         """
-        player_dict = vars(player)
+        player_dict = asdict(player)
         user: User = player_dict.pop("user")
         player_dict["user_id"] = user.id
         return player_dict
@@ -753,8 +794,9 @@ class GameAccessor(BaseAccessor):
             select(GameModel)
             .filter_by(id=game_id)
             .options(
-                joinedload(GameModel.previous_player).subqueryload(
-                    PlayerModel.user
+                joinedload(GameModel.previous_player).options(
+                    subqueryload(PlayerModel.user),
+                    subqueryload(PlayerModel.game),
                 )
             )
         )

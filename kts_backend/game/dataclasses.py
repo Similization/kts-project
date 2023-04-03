@@ -40,7 +40,7 @@ class Game:
     player_list: List[Player]
 
 
-@dataclass(slots=True)
+@dataclass
 class PlayerFull:
     id: int
     user: User

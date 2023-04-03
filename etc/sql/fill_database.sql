@@ -40,23 +40,23 @@ values (1, 'Как в 19 веке в окрестностях Твери наз�
        (25, 'Какое существо может задержать дыхание на 6 суток?', 'Скорпион')
 ;
 
-insert into "user" (id, vk_id, name, last_name, username)
-values (1, 239360732, 'Даниил', 'Бахланов', '@reductor'),
-       (2, 239360735, 'Иван', 'Темный', '@temiy'),
-       (3, 239360737, 'Антон', 'Жигуль', '@zazhiga')
-;
-
-insert into "admin" (id, user_id, email, password)
-values (1, 1, 'borbri228@gmail.com', 'pass228')
-;
-
-insert into game (id, game_data_id, created_at, finished_at, chat_id, chat_message_id,
-                  guessed_word, required_player_count, previous_player_id)
-values (1, 1, now(), null, 1, 1, '', 3, 2)
-;
-
-insert into "player" (id, user_id, game_id, score, is_winner, in_game)
-values (1, 1, 1, 100, FALSE, TRUE),
-       (2, 2, 1, 50, FALSE, TRUE),
-       (3, 3, 1, 200, FALSE, FALSE)
-;
+-- insert into "user" (id, vk_id, name, last_name, username)
+-- values (1, 239360732, 'Даниил', 'Бахланов', '@reductor'),
+--        (2, 239360735, 'Иван', 'Темный', '@temiy'),
+--        (3, 239360737, 'Антон', 'Жигуль', '@zazhiga')
+-- ;
+--
+-- insert into "admin" (id, user_id, email, password)
+-- values (1, 1, 'borbri228@gmail.com', 'pass228')
+-- ;
+--
+-- insert into game (id, game_data_id, created_at, finished_at, chat_id, chat_message_id,
+--                   guessed_word, required_player_count, previous_player_id)
+-- values (1, 1, now(), null, 1, 1, '', 3, 2)
+-- ;
+--
+-- insert into "player" (id, user_id, game_id, score, is_winner, in_game)
+-- values (1, 1, 1, 100, FALSE, TRUE),
+--        (2, 2, 1, 50, FALSE, TRUE),
+--        (3, 3, 1, 200, FALSE, FALSE)
+-- ;

@@ -201,7 +201,7 @@ class VkApiAccessor(BaseAccessor):
                     "message_ids": message_ids,
                     "access_token": self.app.config.bot.token,
                     "delete_for_all": int(delete_for_all),
-                    "peer_id": chat_id,
+                    "peer_id": int(chat_id),
                     "group_id": self.app.config.bot.group_id,
                 },
             )
@@ -275,9 +275,9 @@ class VkApiAccessor(BaseAccessor):
         params = {
             "group_id": self.app.config.bot.group_id,
             "access_token": self.app.config.bot.token,
-            "peer_id": message.peer_id,
+            "peer_id": int(message.peer_id),
             "message_id": str(message_id),
-            "message": message,
+            "message": message.text,
         }
         if keyboard:
             params["keyboard"] = keyboard
@@ -286,6 +286,28 @@ class VkApiAccessor(BaseAccessor):
             self._build_query(
                 host=API_PATH,
                 method="messages.edit",
+                params=params,
+            )
+        ) as resp:
+            data = await resp.json()
+            self.logger.info(msg=data)
+
+    async def pin_message(
+        self, message_id: int, peer_id: int, keyboard: str | None = None
+    ) -> None:
+        params = {
+            "group_id": self.app.config.bot.group_id,
+            "access_token": self.app.config.bot.token,
+            "peer_id": peer_id,
+            "message_id": message_id,
+        }
+        if keyboard:
+            params["keyboard"] = keyboard
+
+        async with self.session.get(
+            self._build_query(
+                host=API_PATH,
+                method="messages.pin",
                 params=params,
             )
         ) as resp:

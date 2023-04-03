@@ -105,7 +105,6 @@ class PoleChuDesGame:
         :param guess: str
         :return: str
         """
-        game_result: str = ""
         # если vk_id не соответствует vk_id того, кто должен ходить сейчас -> ничего не происходит
         if self.current_player.user.vk_id != vk_id:
             return (
@@ -118,83 +117,99 @@ class PoleChuDesGame:
         count_of_active_players = len(active_players)
 
         if len(guess) > 1 or count_of_active_players == 1:
-            # угадал слово
-            if self.check_answer(answer=guess):
-                self.logger.debug(
-                    f"{self.current_player.user.username} guessed a word"
-                )
-                generated_points: int = self.generate_points()
-                self.current_player.score += generated_points
-                game_result = f"Игрок: {self.current_player.user.username} получает {generated_points} очко(ов)\n"
-                self.current_player.is_winner = True
-                self.game.finished_at = datetime.utcnow()
-                game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
-                game_result += f"Отгданное слово: {self.guessed_word}\n"
-                game_result += "Игра завершена!\n"
-                await self.app.store.game.update_one_player_full(
-                    player=self.current_player
-                )
-                self.game.finished_at = datetime.utcnow()
-                self.game.previous_player = self.current_player
-                await self.app.store.game.update_game(game=self.game)
-                return game_result
-            # не угадал слово
-            else:
-                self.logger.debug(
-                    f"{self.current_player.user.username} didn't guess a word"
-                )
-                self.current_player.in_game = False
-                game_result = f"Игрок: {self.current_player.user.username} не угадал слово\n"
-                game_result += f"Отгданное слово: {self.guessed_word}\n"
-                self.current_player.in_game = False
-                await self.app.store.game.update_one_player_full(
-                    player=self.current_player
-                )
-                if count_of_active_players == 1:
-                    self.game.finished_at = datetime.utcnow()
-                    game_result += "Игра завершена!\n"
-                else:
-                    await self.next_player()
-                    game_result += f"Следующий игрок: {self.current_player.user.username}\n"
-                self.game.previous_player = self.current_player
-                await self.app.store.game.update_game(game=self.game)
-                return game_result
+            return await self.guess_word(
+                guess=guess, count_of_active_players=count_of_active_players
+            )
         else:
-            # угадал букву
-            if await self.guess_letter_result(letter=guess):
-                self.logger.debug(
-                    f"{self.current_player.user.username} guessed letter"
-                )
-                generated_points: int = self.generate_points()
-                self.current_player.score += generated_points
-                game_result += f"Игрок: {self.current_player.user.username} получает {generated_points} очко(ов)\n"
-                game_result += f"Отгаданное слово: {self.guessed_word}\n"
-                # угадал слово
-                if self.check_answer(answer=self.guessed_word):
-                    self.current_player.is_winner = True
-                    self.game.finished_at = datetime.utcnow()
-                    game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
-                    game_result += "Игра завершена!\n"
-                await self.app.store.game.update_one_player_full(
-                    player=self.current_player
-                )
-                self.game.previous_player = self.current_player
-                await self.app.store.game.update_game(game=self.game)
-                return game_result
-            # не угадал букву
+            return await self.guess_letter(guess=guess)
+
+    async def guess_word(self, guess: str, count_of_active_players: int):
+        """
+        :param guess:
+        :param count_of_active_players:
+        :return:
+        """
+        game_result = ""
+        if self.check_answer(answer=guess):
+            self.logger.debug(
+                f"{self.current_player.user.username} guessed a word"
+            )
+            game_result += await self.add_points()
+            self.current_player.is_winner = True
+            self.game.finished_at = datetime.utcnow()
+            game_result += (
+                f"Игрок: {self.current_player.user.username} угадал слово!\n"
+            )
+            game_result += f"Отгданное слово: {self.guessed_word}\n"
+            game_result += "Игра завершена!\n"
+            await self.app.store.game.update_one_player_full(
+                player=self.current_player
+            )
+            self.game.previous_player = self.current_player
+            await self.app.store.game.update_game(game=self.game)
+            return game_result
+        else:
+            self.logger.debug(
+                f"{self.current_player.user.username} didn't guess a word"
+            )
+            game_result = (
+                f"Игрок: {self.current_player.user.username} не угадал слово\n"
+            )
+            game_result += f"Отгданное слово: {self.guessed_word}\n"
+            self.current_player.in_game = False
+            await self.app.store.game.update_one_player_full(
+                player=self.current_player
+            )
+            if count_of_active_players == 1:
+                self.game.finished_at = datetime.utcnow()
+                game_result += "Игра завершена!\n"
             else:
-                self.logger.debug(
-                    f"{self.current_player.user.username} didn't guess letter"
-                )
-                game_result += f"Игрок: {self.current_player.user.username} не угадал букву(\n"
-                game_result += f"Отгданное слово: {self.guessed_word}\n"
                 await self.next_player()
                 game_result += (
                     f"Следующий игрок: {self.current_player.user.username}\n"
                 )
-                self.game.previous_player = self.current_player
-                await self.app.store.game.update_game(game=self.game)
-                return game_result
+            self.game.previous_player = self.current_player
+            await self.app.store.game.update_game(game=self.game)
+            return game_result
+
+    async def guess_letter(self, guess: str) -> str:
+        """
+        :param guess:
+        :return:
+        """
+        game_result: str = ""
+        if await self.guess_letter_result(letter=guess):
+            self.logger.debug(
+                f"{self.current_player.user.username} guessed letter"
+            )
+            game_result += await self.add_points()
+            game_result += f"Отгаданное слово: {self.guessed_word}\n"
+            if self.check_answer(answer=self.guessed_word):
+                self.current_player.is_winner = True
+                self.game.finished_at = datetime.utcnow()
+                game_result += f"Игрок: {self.current_player.user.username} угадал слово!\n"
+                game_result += "Игра завершена!\n"
+            await self.app.store.game.update_one_player_full(
+                player=self.current_player
+            )
+            self.game.previous_player = self.current_player
+            await self.app.store.game.update_game(game=self.game)
+            return game_result
+        else:
+            self.logger.debug(
+                f"{self.current_player.user.username} didn't guess letter"
+            )
+            game_result += (
+                f"Игрок: {self.current_player.user.username} не угадал букву(\n"
+            )
+            game_result += f"Отгданное слово: {self.guessed_word}\n"
+            await self.next_player()
+            game_result += (
+                f"Следующий игрок: {self.current_player.user.username}\n"
+            )
+            self.game.previous_player = self.current_player
+            await self.app.store.game.update_game(game=self.game)
+            return game_result
 
     def check_answer(self, answer: str) -> bool:
         """
@@ -221,15 +236,14 @@ class PoleChuDesGame:
         """
         return len(letter) == 1 and letter.isalpha()
 
-    async def add_points(self, player_id: int) -> None:
+    async def add_points(self) -> str:
         """
         Add points to player
-        :param player_id: int
-        :return: None
+        :return: str
         """
-        player = await self.get_player(player_id=player_id)
-        if await self.check_player(player=player):
-            player.score += self.generate_points()
+        generated_points: int = self.generate_points()
+        self.current_player.score += generated_points
+        return f"Игрок: {self.current_player.user.username} получает {generated_points} очко(ов)\n"
 
     async def set_winner(self, player_id: int) -> None:
         """

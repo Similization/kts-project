@@ -14,12 +14,14 @@ class UserError(Exception):
 
 class UserAccessor(BaseAccessor):
     @staticmethod
-    def user_model2user(user_model: UserModel) -> User:
+    def user_model2user(user_model: UserModel | None) -> User | None:
         """
         Convert UserModel object to User object
         :param user_model: UserModel
         :return: User
         """
+        if user_model is None:
+            return None
         return User(
             id=user_model.id,
             vk_id=user_model.vk_id,
@@ -37,7 +39,6 @@ class UserAccessor(BaseAccessor):
         :param user_model_list: List[UserModel]
         :return: List[User]
         """
-        print(user_model_list)
         return [
             UserAccessor.user_model2user(user_model=user_model)
             for user_model in user_model_list
