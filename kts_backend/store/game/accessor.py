@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Sequence
 
 from sqlalchemy import select, update, delete, insert, func
-from sqlalchemy.orm import joinedload, subqueryload
+from sqlalchemy.orm import joinedload
 
 from kts_backend.base.base_accessor import BaseAccessor
 from kts_backend.game.model import (
@@ -47,11 +47,10 @@ class GameAccessor(BaseAccessor):
         :param player_model: PlayerModel
         :return: PlayerFull
         """
-        print(player_model)
         return PlayerFull(
             id=player_model.id,
             user=UserAccessor.user_model2user(player_model.user),
-            game=GameAccessor.game_model2game(player_model.game),
+            game=None,
             score=player_model.score,
             in_game=player_model.in_game,
             is_winner=player_model.is_winner,
@@ -191,8 +190,8 @@ class GameAccessor(BaseAccessor):
         :return:
         """
         player_dict = asdict(player)
-        user: User = player_dict.pop("user")
-        player_dict["user_id"] = user.id
+        user: dict = player_dict.pop("user")
+        player_dict["user_id"] = user["id"]
         return player_dict
 
     @staticmethod
@@ -794,10 +793,12 @@ class GameAccessor(BaseAccessor):
             select(GameModel)
             .filter_by(id=game_id)
             .options(
-                joinedload(GameModel.previous_player).options(
-                    subqueryload(PlayerModel.user),
-                    subqueryload(PlayerModel.game),
-                )
+                joinedload(GameModel.previous_player).subqueryload(
+                    PlayerModel.user
+                ),
+                joinedload(GameModel.previous_player).subqueryload(
+                    PlayerModel.game
+                ),
             )
         )
         async with self.app.database.session.begin() as session:

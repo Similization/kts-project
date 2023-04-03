@@ -299,7 +299,7 @@ class VkApiAccessor(BaseAccessor):
             "group_id": self.app.config.bot.group_id,
             "access_token": self.app.config.bot.token,
             "peer_id": peer_id,
-            "message_id": message_id,
+            "conversation_message_id": message_id,
         }
         if keyboard:
             params["keyboard"] = keyboard
@@ -311,5 +311,5 @@ class VkApiAccessor(BaseAccessor):
                 params=params,
             )
         ) as resp:
-            data = await resp.json()
+            data = (await resp.json())["response"]
             self.logger.info(msg=data)

@@ -82,7 +82,6 @@ class GameModel(db):
         default=None,
     )
     previous_player: Mapped["PlayerModel"] = relationship(
-        backref="player_game",
         foreign_keys=[previous_player_id],
         lazy="subquery",
     )

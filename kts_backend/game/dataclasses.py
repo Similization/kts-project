@@ -44,7 +44,7 @@ class Game:
 class PlayerFull:
     id: int
     user: User
-    game: Game
+    game: Game | None
     score: int
     is_winner: bool | None
     in_game: bool
