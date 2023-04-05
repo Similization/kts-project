@@ -551,11 +551,11 @@ class GameAccessor(BaseAccessor):
             await session.execute(statement=statement)
             await session.commit()
 
-    async def get_players_by_chat_id(self, chat_id: int) -> List[Player] | None:
+    async def get_players_by_chat_id(self, chat_id: str) -> List[Player] | None:
         """
         Get list of Player objects from database by chat_id,
         otherwise return None
-        :param chat_id: int
+        :param chat_id: str
         :return: List[Player] | None
         """
         statement = (
@@ -595,10 +595,11 @@ class GameAccessor(BaseAccessor):
                 player_model_list=player_model_list
             )
 
-    async def get_last_game(self, chat_id: int) -> Game | None:
+    async def get_last_game(self, chat_id: str) -> Game | None:
         """
         Get last Game object from database by chat_id
-        :return:
+        :param: chat_id: str
+        :return: Game | None
         """
         subquery = select(func.max(GameModel.created_at)).filter_by(
             chat_id=chat_id
@@ -607,9 +608,11 @@ class GameAccessor(BaseAccessor):
 
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            game: Optional[GameModel] = res.scalar()
 
-            return await self.get_game_by_date(created_at=game.created_at)
+        game: Optional[GameModel] = res.scalar()
+        if game is None:
+            return None
+        return await self.get_game_by_date(created_at=game.created_at)
 
     async def get_game_data(self, game_data_id: int) -> GameData | None:
         """

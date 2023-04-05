@@ -1,12 +1,12 @@
 -- truncate game_data cascade;
 truncate game cascade;
--- truncate "user" cascade;
+truncate "user" cascade;
 truncate admin cascade;
 truncate player cascade;
 --
 -- alter sequence game_data_id_seq restart with 1;
 alter sequence game_id_seq restart with 1;
--- alter sequence user_id_seq restart with 1;
+alter sequence user_id_seq restart with 1;
 alter sequence admin_id_seq restart with 1;
 alter sequence player_id_seq restart with 1;
 
@@ -60,3 +60,6 @@ values (1, 'Как в 19 веке в окрестностях Твери наз�
 --        (2, 2, 1, 50, FALSE, TRUE),
 --        (3, 3, 1, 200, FALSE, FALSE)
 -- ;
+
+insert into game (game_data_id, created_at, chat_id, guessed_word, required_player_count)
+values (1, now(), 1, '*****', 3);

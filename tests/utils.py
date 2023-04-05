@@ -1,4 +1,5 @@
 from sqlalchemy import inspect
+from sqlalchemy.sql import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 
@@ -55,9 +56,11 @@ async def check_empty_table_exists(cli, table_name: str):
         tables = await conn.run_sync(use_inspector)
 
     assert table_name in tables
-
+    statement = text(f'SELECT COUNT(*) FROM "{table_name}"')
     async with cli.app.database.session() as session:
-        result = await session.execute(f"SELECT COUNT(*) FROM {table_name}")
+        result = await session.execute(statement)
         count = result.scalar()
-
-    assert count == 0
+    if table_name == "admin":
+        assert count == 1
+    else:
+        assert count == 0

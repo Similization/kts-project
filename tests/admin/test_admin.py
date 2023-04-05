@@ -2,7 +2,7 @@ from kts_backend.store import Store
 from tests.utils import ok_response, check_empty_table_exists
 
 
-class TestPlayerStore:
+class TestAdminStore:
     async def test_table_exists(self, cli):
         """
         Tests if the admin table exists in the database
@@ -72,7 +72,7 @@ class TestAdminLoginView:
         resp = await cli.post(
             "/admin.login",
             json={
-                "email": "qwerty",
+                "email": "qwerty@gmail.com",
                 "password": "qwerty",
             },
         )

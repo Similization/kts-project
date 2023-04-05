@@ -18,6 +18,7 @@ class VkButton:
     :param hash_: A unique identifier for the button. Defaults to None.
     :type hash_: str, optional
     """
+
     def __init__(
         self,
         payload: dict | None = None,
@@ -74,7 +75,4 @@ JOIN_GAME_BUTTON = VkButton(
     label="Присоединиться",
     color="positive",
 )
-FINISH_GAME_BUTTON = VkButton(
-    label="Завершить игру",
-    color="negative"
-)
+FINISH_GAME_BUTTON = VkButton(label="Завершить игру", color="negative")

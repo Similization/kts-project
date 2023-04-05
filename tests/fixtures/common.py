@@ -14,6 +14,8 @@ from kts_backend.admin.dataclasses import Admin
 from kts_backend.admin.model import AdminModel
 from kts_backend.store import Database
 from kts_backend.store import Store
+from kts_backend.store.bot.manager import BotManager
+from kts_backend.store.game.accessor import GameAccessor
 from kts_backend.web.app import setup_app, Application
 from kts_backend.web.config import Config
 
@@ -40,7 +42,7 @@ def server() -> Application:
     app.store.vk_api = AsyncMock()
     app.store.vk_api.send_message = AsyncMock()
 
-    app.database = Database(app)
+    app.database = Database(app=app)
     app.on_startup.append(app.database.connect)
     app.on_shutdown.append(app.database.disconnect)
 
@@ -54,6 +56,15 @@ def store(server) -> Store:
     :return: Store
     """
     return server.store
+
+
+@pytest.fixture
+def bot_manager(store) -> BotManager:
+    """
+    :param store:
+    :return: BotManager
+    """
+    return store.bots_manager
 
 
 @pytest.fixture

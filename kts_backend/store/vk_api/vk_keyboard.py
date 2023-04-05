@@ -35,8 +35,14 @@ class VkKeyboard:
 
         :return: A JSON string representing the VkKeyboard object.
         """
-        buttons = [[button.convert_to_dict() for button in row] for row in self.buttons]
-        keyboard = {"buttons": buttons, "one_time": self.one_time, "inline": self.inline}
+        buttons = [
+            [button.convert_to_dict() for button in row] for row in self.buttons
+        ]
+        keyboard = {
+            "buttons": buttons,
+            "one_time": self.one_time,
+            "inline": self.inline,
+        }
         return json.dumps(keyboard, ensure_ascii=False)
 
 

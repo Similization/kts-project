@@ -46,9 +46,9 @@ class VkApiAccessor(BaseAccessor):
         self.poller = Poller(store=app.store)
         self.worker = Worker(store=app.store, concurrent_workers=4)
 
-        self.logger.info(msg="start polling")
+        self.logger.warning(msg="start polling")
         await self.poller.start()
-        self.logger.info(msg="start workers")
+        self.logger.warning(msg="start workers")
         await self.worker.start()
 
     async def disconnect(self, app: "Application") -> None:
@@ -56,10 +56,10 @@ class VkApiAccessor(BaseAccessor):
         :param app:Application
         :return: None
         """
-        if self.poller:
-            await self.poller.stop()
         if self.worker:
             await self.worker.stop()
+        if self.poller:
+            await self.poller.stop()
         if self.session:
             await self.session.close()
 
@@ -160,9 +160,9 @@ class VkApiAccessor(BaseAccessor):
             )
         ) as resp:
             try:
-                data = (await resp.json())["response"]
-                self.logger.info(msg=data)
-                profiles = data["profiles"]
+                data = await resp.json()
+                self.logger.warning(msg=data)
+                profiles = data["response"]["profiles"]
                 return profiles
             except KeyError as e:
                 self.logger.error(e)
@@ -219,8 +219,8 @@ class VkApiAccessor(BaseAccessor):
             )
         ) as resp:
             try:
-                data = (await resp.json())["response"]
-                self.logger.info(msg=data)
+                data = await resp.json()
+                self.logger.warning(msg=data)
             except KeyError as e:
                 self.logger.error(e)
 
@@ -298,7 +298,7 @@ class VkApiAccessor(BaseAccessor):
             "group_id": self.app.config.bot.group_id,
             "access_token": self.app.config.bot.token,
             "peer_id": int(message.peer_id),
-            "message_id": str(message_id),
+            "conversation_message_id": str(message_id),
             "message": message.text,
         }
         if keyboard:
@@ -312,8 +312,8 @@ class VkApiAccessor(BaseAccessor):
             )
         ) as resp:
             try:
-                data = (await resp.json())["response"]
-                self.logger.info(msg=data)
+                data = await resp.json()
+                self.logger.warning(msg=data)
             except KeyError as e:
                 self.logger.error(e)
 
@@ -337,7 +337,7 @@ class VkApiAccessor(BaseAccessor):
             )
         ) as resp:
             try:
-                data = (await resp.json())
+                data = await resp.json()
                 self.logger.info(msg=data)
             except KeyError as e:
                 self.logger.error(e)

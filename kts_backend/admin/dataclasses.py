@@ -35,7 +35,7 @@ class Admin:
         Returns:
             Optional["Admin"]: The Admin object, or None if the session is None.
         """
-        if session is None or "admin" not in session:
+        if session is None:
             return None
 
         admin_data = session["admin"]

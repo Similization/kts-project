@@ -269,7 +269,10 @@ class PoleChuDesGame:
         lower_answer = self.game.game_data.answer.lower()
 
         # If letter has already been guessed or is not in the answer, return False
-        if lower_letter in self.guessed_letters or lower_letter not in lower_answer:
+        if (
+            lower_letter in self.guessed_letters
+            or lower_letter not in lower_answer
+        ):
             return False
 
         # Add letter to guessed letters and update guessed word
@@ -278,7 +281,7 @@ class PoleChuDesGame:
             if lower_answer[i] != letter:
                 continue
             self.guessed_word = (
-                    self.guessed_word[:i] + letter + self.guessed_word[i + 1:]
+                self.guessed_word[:i] + letter + self.guessed_word[i + 1 :]
             )
         return True
 

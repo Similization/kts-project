@@ -157,7 +157,7 @@ async def game_data_1(db_session: AsyncSession) -> GameData:
     :return:
     """
     question = "Who is the president of Uganda?"
-    answer = "Who cares"
+    answer = "Sonic"
     new_game_data = GameDataModel(question=question, answer=answer)
 
     async with db_session.begin() as session:
@@ -307,7 +307,9 @@ async def game_3(
         "%Y-%m-%d %H:%M:%S.%f",
     )
 
-    new_game = GameModel(game_data_id=game_data_id, chat_id=chat_id, finished_at=finished_at)
+    new_game = GameModel(
+        game_data_id=game_data_id, chat_id=chat_id, finished_at=finished_at
+    )
 
     async with db_session.begin() as session:
         session.add(new_game)

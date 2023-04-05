@@ -25,9 +25,11 @@ class TestPlayerStore:
         :param game_data_1:
         :return:
         """
-        chat_id: int = 1
+        chat_id: str = "1"
+        answer: str = game_data_1.answer
+
         created_game = await store.game.create_game(
-            game_data_id=game_data_1.id, chat_id=chat_id
+            game_data_id=game_data_1.id, chat_id=chat_id, answer=answer
         )
         assert type(created_game) is Game
 
@@ -48,12 +50,13 @@ class TestPlayerStore:
         :param store:
         :return:
         """
-        chat_id: int = 1
+        chat_id: str = "1"
         game_data_id: int = 1
+        answer: str = "cat"
 
         with pytest.raises(IntegrityError) as exc_info:
             await store.game.create_game(
-                game_data_id=game_data_id, chat_id=chat_id
+                game_data_id=game_data_id, chat_id=chat_id, answer=answer
             )
         assert exc_info.value.orig.pgcode == "23503"
 

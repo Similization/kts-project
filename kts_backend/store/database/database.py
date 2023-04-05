@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     create_async_engine,
-    async_sessionmaker
+    async_sessionmaker,
 )
 
 from kts_backend.store.database.sqlalchemy_base import db

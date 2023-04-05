@@ -105,7 +105,6 @@ class BotManager:
                     GameData
                 ] = await self.app.store.game.get_game_data_list()
                 random_game_data: GameData = choice(game_data_list)
-
                 # get users from bd if not exist - then create
                 profiles: List[
                     dict
@@ -171,7 +170,6 @@ class BotManager:
                     game_id=created_game.id,
                     message_id=new_pole_game.game.chat_message_id,
                 )
-                print(new_pole_game.game.chat_message_id)
                 await self.app.store.vk_api.pin_message(
                     message_id=new_pole_game.game.chat_message_id,
                     peer_id=update.update_object.peer_id,
@@ -192,6 +190,7 @@ class BotManager:
             if update.update_object.body.find(PARSE_COMMANDS["finish"]) != -1:
                 result_string = "Результаты игры:\n" + "\n".join(results) + "\n"
                 await self.app.store.vk_api.send_message(
+                    # message_id=game.game.chat_message_id,
                     message=Message(
                         user_id=update.update_object.user_id,
                         peer_id=update.update_object.peer_id,
@@ -202,7 +201,8 @@ class BotManager:
                 return
 
             res = await game.check_guess(
-                vk_id=update.update_object.user_id, guess=update.update_object.body
+                vk_id=update.update_object.user_id,
+                guess=update.update_object.body,
             )
             result_string = (
                 "Результаты игры:\n" + "\n".join(results) + f"\n{res}\n"
@@ -214,6 +214,7 @@ class BotManager:
                 keyboard = None
 
             await self.app.store.vk_api.send_message(
+                # message_id=game.game.chat_message_id,
                 message=Message(
                     user_id=update.update_object.user_id,
                     peer_id=update.update_object.peer_id,

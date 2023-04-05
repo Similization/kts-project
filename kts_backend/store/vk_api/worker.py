@@ -17,13 +17,14 @@ from kts_backend.store.vk_api.poller import QUEUE_NAME
 
 class Worker:
     """
-       A worker class that consumes messages from a message queue and
-       handles them using a given store.
+    A worker class that consumes messages from a message queue and
+    handles them using a given store.
 
-       Args:
-           store (Store): The store instance that will be used to handle updates.
-           concurrent_workers (int): The number of concurrent worker tasks to run.
-       """
+    Args:
+        store (Store): The store instance that will be used to handle updates.
+        concurrent_workers (int): The number of concurrent worker tasks to run.
+    """
+
     def __init__(self, store: Store, concurrent_workers: int):
         """
         :param store: Store
@@ -75,7 +76,12 @@ class Worker:
                 asyncio.create_task(self._worker())
                 for _ in range(self.concurrent_workers)
             ]
-            await asyncio.Future()
+            try:
+                # Wait until terminate
+                await asyncio.Future()
+                # pass
+            finally:
+                await self.connection.close()
 
     async def callback(self, message: AbstractIncomingMessage) -> None:
         """
@@ -119,11 +125,11 @@ class Worker:
 
     async def _worker(self) -> None:
         """
-          A worker task that consumes messages from the queue and passes them
-          to the callback function.
+        A worker task that consumes messages from the queue and passes them
+        to the callback function.
 
-          Returns:
-            None
+        Returns:
+          None
         """
         while True:
             await self.queue.consume(callback=self.callback, no_ack=True)
