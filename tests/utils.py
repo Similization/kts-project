@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 def ok_response(data: dict) -> dict:
     """
-    Response if no error occurs
+    Returns a response dictionary with 'status' set to 'ok' and 'data' set to the given data dictionary.
+
     :param data: dict
     :return: dict
     """
@@ -16,7 +17,8 @@ def ok_response(data: dict) -> dict:
 
 def error_response(status: str, message: str, data: dict) -> dict:
     """
-    Response in case of errors
+    Returns a response dictionary with 'status', 'message', and 'data' set to the given arguments.
+
     :param status: str
     :param message: str
     :param data: dict
@@ -31,9 +33,10 @@ def error_response(status: str, message: str, data: dict) -> dict:
 
 def use_inspector(conn):
     """
-    Get table names
-    :param conn:
-    :return:
+    Returns a list of table names in the given database connection.
+
+    :param conn: SQLAlchemy database connection
+    :return: list of str
     """
     inspector = inspect(conn)
     return inspector.get_table_names()
@@ -41,13 +44,20 @@ def use_inspector(conn):
 
 async def check_empty_table_exists(cli, table_name: str):
     """
-    Check if empty table is exist
-    :param cli:
+    Asserts that the given table name exists in the database connected to the given CLI, and that it is empty.
+
+    :param cli: KTS CLI object
     :param table_name: str
-    :return:
+    :raises AssertionError: if the table does not exist or if it is not empty
     """
     engine: AsyncEngine = cli.app.database._engine
     async with engine.begin() as conn:
         tables = await conn.run_sync(use_inspector)
 
     assert table_name in tables
+
+    async with cli.app.database.session() as session:
+        result = await session.execute(f"SELECT COUNT(*) FROM {table_name}")
+        count = result.scalar()
+
+    assert count == 0

@@ -8,7 +8,7 @@ from kts_backend.game.dataclasses import GameFull, GameData, Game
 from kts_backend.store.bot.util import parse_text
 from kts_backend.store.game.game import PoleChuDesGame
 from kts_backend.store.vk_api.dataclasses import Message, Update
-from kts_backend.store.vk_api.vk_keyboard import KEYBOARD_FINISH
+from kts_backend.store.vk_api.vk_keyboard import VK_KEYBOARDS
 
 if typing.TYPE_CHECKING:
     from kts_backend.web.app import Application
@@ -64,7 +64,7 @@ class BotManager:
 
     async def check_update(self, update: Update):
         game: PoleChuDesGame | None = await self.get_game_by_chat_id(
-            chat_id=update.object.peer_id
+            chat_id=update.update_object.peer_id
         )
 
         if game is None:
@@ -75,15 +75,15 @@ class BotManager:
                 "Максимальное число игроков - 5\n"
                 "@username пользователей необходимо указывать через запятую с пробелом"
             )
-            body = update.object.body
+            body = update.update_object.body
             if body.startswith(PARSE_COMMANDS["start"]):
                 username_list = body[len(PARSE_COMMANDS["start"]) :].split(", ")
                 count_of_players = len(username_list)
                 if count_of_players > MAX_PLAYER_COUNT:
                     await self.app.store.vk_api.send_message(
                         message=Message(
-                            user_id=update.object.user_id,
-                            peer_id=update.object.peer_id,
+                            user_id=update.update_object.user_id,
+                            peer_id=update.update_object.peer_id,
                             text=parse_text(
                                 text="Игроков слишком много!\n\n" + text
                             ),
@@ -93,8 +93,8 @@ class BotManager:
                 if count_of_players < MIN_PLAYER_COUNT:
                     await self.app.store.vk_api.send_message(
                         message=Message(
-                            user_id=update.object.user_id,
-                            peer_id=update.object.peer_id,
+                            user_id=update.update_object.user_id,
+                            peer_id=update.update_object.peer_id,
                             text=parse_text(
                                 text="Игроков слишком мало!\n\n" + text
                             ),
@@ -110,7 +110,7 @@ class BotManager:
                 profiles: List[
                     dict
                 ] = await self.app.store.vk_api.get_chat_users(
-                    chat_id=int(update.object.peer_id)
+                    chat_id=int(update.update_object.peer_id)
                 )
                 profile_dicts: List[dict] = [
                     {
@@ -124,7 +124,7 @@ class BotManager:
                 created_game: Game = await self.app.store.game.create_game(
                     game_data_id=random_game_data.id,
                     answer=random_game_data.answer,
-                    chat_id=update.object.peer_id,
+                    chat_id=update.update_object.peer_id,
                     required_player_count=count_of_players,
                 )
 
@@ -156,30 +156,31 @@ class BotManager:
                 )
                 await self.app.store.vk_api.send_message(
                     message=Message(
-                        user_id=update.object.user_id,
-                        peer_id=update.object.peer_id,
+                        user_id=update.update_object.user_id,
+                        peer_id=update.update_object.peer_id,
                         text=parse_text(result_string),
                     ),
-                    keyboard=KEYBOARD_FINISH,
+                    keyboard=VK_KEYBOARDS["KEYBOARD_FINISH"],
                 )
                 new_pole_game.game.chat_message_id = (
                     await self.app.store.vk_api.get_history(
-                        chat_id=update.object.peer_id
+                        chat_id=update.update_object.peer_id
                     )
                 )
                 await self.app.store.game.update_game_message_id(
                     game_id=created_game.id,
                     message_id=new_pole_game.game.chat_message_id,
                 )
+                print(new_pole_game.game.chat_message_id)
                 await self.app.store.vk_api.pin_message(
                     message_id=new_pole_game.game.chat_message_id,
-                    peer_id=update.object.peer_id,
+                    peer_id=update.update_object.peer_id,
                 )
             else:
                 await self.app.store.vk_api.send_message(
                     message=Message(
-                        user_id=update.object.user_id,
-                        peer_id=update.object.peer_id,
+                        user_id=update.update_object.user_id,
+                        peer_id=update.update_object.peer_id,
                         text=parse_text(text=text),
                     )
                 )
@@ -188,12 +189,12 @@ class BotManager:
                 f"{i + 1}) {player.user.username}: {player.score}"
                 for i, player in enumerate(game.game.player_list)
             ]
-            if update.object.body.find(PARSE_COMMANDS["finish"]) != -1:
+            if update.update_object.body.find(PARSE_COMMANDS["finish"]) != -1:
                 result_string = "Результаты игры:\n" + "\n".join(results) + "\n"
                 await self.app.store.vk_api.send_message(
                     message=Message(
-                        user_id=update.object.user_id,
-                        peer_id=update.object.peer_id,
+                        user_id=update.update_object.user_id,
+                        peer_id=update.update_object.peer_id,
                         text=parse_text(result_string),
                     )
                 )
@@ -201,12 +202,12 @@ class BotManager:
                 return
 
             res = await game.check_guess(
-                vk_id=update.object.user_id, guess=update.object.body
+                vk_id=update.update_object.user_id, guess=update.update_object.body
             )
             result_string = (
                 "Результаты игры:\n" + "\n".join(results) + f"\n{res}\n"
             )
-            keyboard = KEYBOARD_FINISH
+            keyboard = VK_KEYBOARDS["KEYBOARD_FINISH"]
 
             if "Игра завершена" in res:
                 await self.finish_game(game)
@@ -214,8 +215,8 @@ class BotManager:
 
             await self.app.store.vk_api.send_message(
                 message=Message(
-                    user_id=update.object.user_id,
-                    peer_id=update.object.peer_id,
+                    user_id=update.update_object.user_id,
+                    peer_id=update.update_object.peer_id,
                     text=parse_text(text=result_string),
                 ),
                 keyboard=keyboard,
@@ -250,6 +251,6 @@ class BotManager:
             # await self.app.store.vk_api.get_history(chat_id=update.object.peer_id)
             # Delete the message from chat after processing
             await self.app.store.vk_api.delete_message_from_chat(
-                message_ids=update.object.message_id,
-                chat_id=update.object.peer_id,
+                message_ids=update.update_object.message_id,
+                chat_id=update.update_object.peer_id,
             )

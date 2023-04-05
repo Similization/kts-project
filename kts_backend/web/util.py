@@ -1,12 +1,14 @@
-from typing import Any
+from typing import Any, Dict
 
 from aiohttp.web import json_response as aiohttp_json_response
 from aiohttp.web_response import Response
 
 
-def json_response(data: Any = None, status: str = "ok") -> Response:
+def json_response(data: Dict[str, Any] = None, status: str = "ok") -> Response:
     """
-    :param data: Any
+    Return a JSON response with a success status and optional data.
+
+    :param data: Dict[str, Any] or None
     :param status: str
     :return: Response
     """
@@ -23,14 +25,16 @@ def json_response(data: Any = None, status: str = "ok") -> Response:
 def error_json_response(
     http_status: int,
     status: str = "error",
-    message: str | None = None,
-    data: dict | None = None,
+    message: str = "",
+    data: Dict[str, Any] = None,
 ) -> Response:
     """
+    Return a JSON response with an error status, message and optional data.
+
     :param http_status: int
     :param status: str
-    :param message: str | None
-    :param data: str | None
+    :param message: str
+    :param data: Dict[str, Any] or None
     :return: Response
     """
     if data is None:
@@ -39,7 +43,7 @@ def error_json_response(
         status=http_status,
         data={
             "status": status,
-            "message": str(message),
+            "message": message,
             "data": data,
         },
     )

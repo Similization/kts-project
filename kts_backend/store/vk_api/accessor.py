@@ -1,6 +1,7 @@
+import logging
 import random
 import typing
-from typing import Optional, List
+from typing import List
 
 from aiohttp import TCPConnector
 from aiohttp.client import ClientSession
@@ -30,6 +31,7 @@ class VkApiAccessor(BaseAccessor):
         self.poller: Poller | None = None
         self.worker: Worker | None = None
         self.ts: int | None = None
+        self.logger = logging.getLogger(__name__)
 
     async def connect(self, app: "Application"):
         """
@@ -92,15 +94,15 @@ class VkApiAccessor(BaseAccessor):
                 },
             )
         ) as resp:
-            if resp.status != 200:
-                self.logger.error(await resp.json())
-            else:
+            try:
                 data = (await resp.json())["response"]
                 self.logger.info(data)
                 self.key = data["key"]
                 self.server = data["server"]
                 self.ts = data["ts"]
-                self.logger.info(self.server)
+                self.logger.info(msg=self.server)
+            except KeyError as e:
+                self.logger.error(e)
 
     async def poll(self) -> List[Update]:
         """
@@ -118,25 +120,28 @@ class VkApiAccessor(BaseAccessor):
                 },
             )
         ) as resp:
-            data = await resp.json()
-            self.logger.info(data)
-            self.ts = data["ts"]
-            raw_updates = data.get("updates", [])
-            return [
-                Update(
-                    type=update["type"],
-                    object=UpdateObject(
-                        id=update["object"]["message"]["id"],
-                        user_id=update["object"]["message"]["from_id"],
-                        message_id=update["object"]["message"][
-                            "conversation_message_id"
-                        ],
-                        peer_id=str(update["object"]["message"]["peer_id"]),
-                        body=update["object"]["message"]["text"],
-                    ),
-                )
-                for update in raw_updates
-            ]
+            try:
+                data = await resp.json()
+                self.logger.info(data)
+                self.ts = data["ts"]
+                raw_updates = data.get("updates", [])
+                return [
+                    Update(
+                        type=update["type"],
+                        update_object=UpdateObject(
+                            id=update["object"]["message"]["id"],
+                            user_id=update["object"]["message"]["from_id"],
+                            message_id=update["object"]["message"][
+                                "conversation_message_id"
+                            ],
+                            peer_id=str(update["object"]["message"]["peer_id"]),
+                            body=update["object"]["message"]["text"],
+                        ),
+                    )
+                    for update in raw_updates
+                ]
+            except KeyError as e:
+                self.logger.error(e)
 
     async def get_chat_users(self, chat_id: str):
         """
@@ -154,9 +159,13 @@ class VkApiAccessor(BaseAccessor):
                 },
             )
         ) as resp:
-            data = (await resp.json())["response"]
-            profiles = data["profiles"]
-            return profiles
+            try:
+                data = (await resp.json())["response"]
+                self.logger.info(msg=data)
+                profiles = data["profiles"]
+                return profiles
+            except KeyError as e:
+                self.logger.error(e)
 
     async def get_history(self, chat_id: str, count: int = 10):
         """
@@ -176,12 +185,15 @@ class VkApiAccessor(BaseAccessor):
                 },
             )
         ) as resp:
-            data = await resp.json()
-            self.logger.info(msg=data)
-            items = data["response"]["items"]
-            for item in items:
-                if item["from_id"] == -self.app.config.bot.group_id:
-                    return int(item["conversation_message_id"])
+            try:
+                data = (await resp.json())["response"]
+                self.logger.info(msg=data)
+                items = data["items"]
+                for item in items:
+                    if item["from_id"] == -self.app.config.bot.group_id:
+                        return int(item["conversation_message_id"])
+            except KeyError as e:
+                self.logger.error(e)
             return None
 
     async def delete_message_from_chat(
@@ -198,7 +210,7 @@ class VkApiAccessor(BaseAccessor):
                 host=API_PATH,
                 method="messages.delete",
                 params={
-                    "message_ids": message_ids,
+                    "cmids": message_ids,
                     "access_token": self.app.config.bot.token,
                     "delete_for_all": int(delete_for_all),
                     "peer_id": int(chat_id),
@@ -206,8 +218,11 @@ class VkApiAccessor(BaseAccessor):
                 },
             )
         ) as resp:
-            data = await resp.json()
-            self.logger.info(msg=data)
+            try:
+                data = (await resp.json())["response"]
+                self.logger.info(msg=data)
+            except KeyError as e:
+                self.logger.error(e)
 
     async def get_active_chat_id_list(self) -> List[dict]:
         """
@@ -223,17 +238,21 @@ class VkApiAccessor(BaseAccessor):
                 },
             )
         ) as resp:
-            data = (await resp.json())["response"]
-            chat_list: List[dict] = data["items"]
-            return [
-                chat["conversation"]["peer"]["id"]
-                for chat in chat_list
-                if chat["conversation"]["peer"]["type"] == "chat"
-                and chat["conversation"]["can_write"]["allowed"]
-            ]
+            try:
+                data = (await resp.json())["response"]
+                chat_list: List[dict] = data["items"]
+                self.logger.info(msg=data)
+                return [
+                    chat["conversation"]["peer"]["id"]
+                    for chat in chat_list
+                    if chat["conversation"]["peer"]["type"] == "chat"
+                    and chat["conversation"]["can_write"]["allowed"]
+                ]
+            except KeyError as e:
+                self.logger.error(e)
 
     async def send_message(
-        self, message: Message, keyboard: Optional[dict] = None
+        self, message: Message, keyboard: dict | None = None
     ) -> None:
         """
         :param message:
@@ -259,8 +278,11 @@ class VkApiAccessor(BaseAccessor):
                 params=params,
             )
         ) as resp:
-            data = await resp.json()
-            self.logger.info(msg=data)
+            try:
+                data = (await resp.json())["response"]
+                self.logger.info(msg=data)
+            except KeyError as e:
+                self.logger.error(e)
 
     async def edit_message(
         self, message_id: int, message: Message, keyboard: str | None = None
@@ -289,8 +311,11 @@ class VkApiAccessor(BaseAccessor):
                 params=params,
             )
         ) as resp:
-            data = await resp.json()
-            self.logger.info(msg=data)
+            try:
+                data = (await resp.json())["response"]
+                self.logger.info(msg=data)
+            except KeyError as e:
+                self.logger.error(e)
 
     async def pin_message(
         self, message_id: int, peer_id: int, keyboard: str | None = None
@@ -311,5 +336,8 @@ class VkApiAccessor(BaseAccessor):
                 params=params,
             )
         ) as resp:
-            data = (await resp.json())["response"]
-            self.logger.info(msg=data)
+            try:
+                data = (await resp.json())
+                self.logger.info(msg=data)
+            except KeyError as e:
+                self.logger.error(e)

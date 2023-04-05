@@ -2,50 +2,119 @@ from marshmallow import Schema, fields
 
 
 class UserIdSchema(Schema):
-    id = fields.Int(required=True)
+    """
+    Schema for User ID
+    """
+
+    id = fields.Int(required=True, description="User ID")
 
 
 class UserIdListSchema(Schema):
-    user_id_list = fields.List(cls_or_instance=fields.Int, required=True)
+    """
+    Schema for list of User IDs
+    """
+
+    user_id_list = fields.List(
+        cls_or_instance=fields.Int,
+        required=True,
+        description="List of User IDs",
+    )
 
 
 class UserCreateSchema(Schema):
-    vk_id = fields.Int(required=True)
-    name = fields.Str(required=True)
-    last_name = fields.Str(required=True)
-    username = fields.Str(required=True)
+    """
+    Schema for creating a new user
+    """
+
+    vk_id = fields.Int(required=True, description="VK ID of user")
+    name = fields.Str(required=True, description="First name of user")
+    last_name = fields.Str(required=True, description="Last name of user")
+    username = fields.Str(required=True, description="Username of user")
 
 
 class UserFullCreateSchema(Schema):
-    user = fields.Nested(UserCreateSchema, many=False, required=True)
+    """
+    Schema for creating a new user (full)
+    """
+
+    user = fields.Nested(
+        UserCreateSchema,
+        many=False,
+        required=True,
+        description="Details of user to be created",
+    )
 
 
 class UserFullListCreateSchema(Schema):
-    user_list = fields.Nested(UserCreateSchema, many=True, required=True)
+    """
+    Schema for creating a list of new users (full)
+    """
+
+    user_list = fields.Nested(
+        UserCreateSchema,
+        many=True,
+        required=True,
+        description="List of details of users to be created",
+    )
 
 
 class UserUpdateSchema(Schema):
-    id = fields.Int(required=True)
-    vk_id = fields.Int(required=True)
-    name = fields.Str(required=True)
-    last_name = fields.Str(required=True)
-    username = fields.Str(required=True)
+    """
+    Schema for updating an existing user
+    """
+
+    id = fields.Int(required=True, description="ID of user to be updated")
+    vk_id = fields.Int(required=True, description="New VK ID of user")
+    name = fields.Str(required=True, description="New first name of user")
+    last_name = fields.Str(required=True, description="New last name of user")
+    username = fields.Str(required=True, description="New username of user")
 
 
 class UserFullUpdateSchema(Schema):
-    user = fields.Nested(UserUpdateSchema, many=False, required=True)
+    """
+    Schema for updating an existing user (full)
+    """
+
+    user = fields.Nested(
+        UserUpdateSchema,
+        many=False,
+        required=True,
+        description="Details of user to be updated",
+    )
 
 
 class UserFullListUpdateSchema(Schema):
-    user_list = fields.Nested(UserUpdateSchema, many=True, required=True)
+    """
+    Schema for updating a list of existing users (full)
+    """
+
+    user_list = fields.Nested(
+        UserUpdateSchema,
+        many=True,
+        required=True,
+        description="List of details of users to be updated",
+    )
 
 
 class UserSchema(UserIdSchema):
-    vk_id = fields.Int(required=False)
-    name = fields.Str(required=False)
-    last_name = fields.Str(required=False)
-    username = fields.Str(required=False)
+    """
+    Schema for retrieving user details
+    """
+
+    vk_id = fields.Int(required=False, description="VK ID of user")
+    name = fields.Str(required=False, description="First name of user")
+    last_name = fields.Str(required=False, description="Last name of user")
+    username = fields.Str(required=False, description="Username of user")
 
 
 class UserManySchema(UserIdSchema):
-    user_list = fields.Nested(UserSchema, many=True, required=False)
+    """
+    Schema for retrieving details of multiple users
+    """
+
+    user_list = fields.Nested(
+        UserSchema,
+        many=True,
+        required=False,
+        description="List of users' details",
+    )

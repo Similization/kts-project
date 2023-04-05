@@ -4,7 +4,7 @@ if typing.TYPE_CHECKING:
     from kts_backend.web.app import Application
 
 
-def setup_routes(app: "Application"):
+def setup_routes(app: "Application") -> None:
     """
     Setup routes /admin route.<method> for application
     :param app: Application

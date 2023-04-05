@@ -273,6 +273,7 @@ async def game_2(
         session.add(new_game)
 
         for player in players_1:
+            player.game_id = new_game.id
             session.add(player)
 
     return Game(
@@ -301,13 +302,18 @@ async def game_3(
     """
     game_data_id = game_data_3.id
     chat_id: str = "2"
+    finished_at = datetime.datetime.strptime(
+        "2023-02-24 20:02:22.000000",
+        "%Y-%m-%d %H:%M:%S.%f",
+    )
 
-    new_game = GameModel(game_data_id=game_data_id, chat_id=chat_id)
+    new_game = GameModel(game_data_id=game_data_id, chat_id=chat_id, finished_at=finished_at)
 
     async with db_session.begin() as session:
         session.add(new_game)
 
         for player in players_2:
+            player.game_id = new_game.id
             session.add(player)
 
     return Game(

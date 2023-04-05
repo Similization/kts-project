@@ -677,7 +677,7 @@ class GameAccessor(BaseAccessor):
         """
         Get all unfinished games from database,
         otherwise return None
-        :return: List[Game] | None
+        :return: List[GameFull] | None
         """
         statement = (
             select(GameModel)

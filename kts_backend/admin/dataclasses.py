@@ -5,6 +5,8 @@ from typing import Optional
 
 @dataclass(slots=True)
 class Admin:
+    """A class representing an admin user"""
+
     id: int
     email: str
     user_id: int | None = None
@@ -12,17 +14,29 @@ class Admin:
 
     def is_password_valid(self, password: str) -> bool:
         """
-        Checks if the password is correct
-        :param password: str
-        :return: bool
+        Checks if the password is correct.
+
+        Args:
+            password (str): The password to check.
+
+        Returns:
+            bool: True if the password is correct, False otherwise.
         """
         return self.password == sha256(password.encode()).hexdigest()
 
     @classmethod
     def from_session(cls, session: dict | None) -> Optional["Admin"]:
         """
-        Get Admin object from session
-        :param session: dict | None
-        :return: Optional["Admin"]
+        Get Admin object from session.
+
+        Args:
+            session (dict | None): The session to get the Admin object from.
+
+        Returns:
+            Optional["Admin"]: The Admin object, or None if the session is None.
         """
-        return cls(id=session["admin"]["id"], email=session["admin"]["email"])
+        if session is None or "admin" not in session:
+            return None
+
+        admin_data = session["admin"]
+        return cls(id=admin_data["id"], email=admin_data["email"])

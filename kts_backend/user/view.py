@@ -1,7 +1,7 @@
 from typing import List
 
-from aiohttp_apispec import request_schema, response_schema
 from aiohttp.web_response import Response
+from aiohttp_apispec import request_schema, response_schema
 
 from kts_backend.user.schema import (
     UserSchema,
@@ -18,11 +18,31 @@ from kts_backend.web.util import json_response
 
 
 class UserGetView(View):
-    @request_schema(UserIdSchema)
-    @response_schema(UserSchema, 200)
+    """
+    A view to get a single user's information by their ID.
+
+    Expected request format:
+    {
+        "user_id": int
+    }
+
+    Example response format:
+    {
+        "id": int,
+        "vk_id": int,
+        "name": str,
+        "last_name": str,
+        "username": str
+    }
+    """
+
+    @request_schema(schema=UserIdSchema)
+    @response_schema(schema=UserSchema, code=200)
     async def post(self) -> Response:
         """
-        :return: Response
+        Get a user's information by their ID.
+
+        :return: Response with user information.
         """
         user_id: int = self.data["user_id"]
         user = await self.store.user.get_user(user_id=user_id)
@@ -30,11 +50,36 @@ class UserGetView(View):
 
 
 class UserGetManyView(View):
-    @request_schema(UserIdListSchema)
-    @response_schema(UserManySchema, 200)
+    """
+    A view to get information for multiple users by their IDs.
+
+    Expected request format:
+    {
+        "user_id_list": [int]
+    }
+
+    Example response format:
+    {
+        "user_list": [
+            {
+                "id": int,
+                "vk_id": int,
+                "name": str,
+                "last_name": str,
+                "username": str
+            },
+            ...
+        ]
+    }
+    """
+
+    @request_schema(schema=UserIdListSchema)
+    @response_schema(schema=UserManySchema, code=200)
     async def post(self) -> Response:
         """
-        :return: Response
+        Get information for multiple users by their IDs.
+
+        :return: Response with user information.
         """
         user_id_list: List[int] = self.data["user_id_list"]
         user_list = await self.store.user.get_user(user_id=user_id_list)
@@ -43,11 +88,36 @@ class UserGetManyView(View):
 
 
 class UserCreateView(View):
-    @request_schema(UserFullCreateSchema)
-    @response_schema(UserSchema, 200)
+    """
+    A view to create a new user.
+
+    Request Body:
+    {
+        "user": {
+            "vk_id": int,
+            "name": str,
+            "last_name": str,
+            "username": str
+        }
+    }
+
+    Response Body:
+    {
+        "id": int,
+        "vk_id": int,
+        "name": str,
+        "last_name": str,
+        "username": str
+    }
+    """
+
+    @request_schema(schema=UserFullCreateSchema)
+    @response_schema(schema=UserSchema, code=201)
     async def post(self) -> Response:
         """
-        :return: Response
+        Create a new user.
+
+        :return: Response object
         """
         user_dict: dict = self.data["user"]
         created_user = await self.store.user.create_user(user=user_dict)
@@ -55,11 +125,44 @@ class UserCreateView(View):
 
 
 class UserCreateManyView(View):
-    @request_schema(UserFullListCreateSchema)
-    @response_schema(UserManySchema, 200)
+    """
+    A view to create multiple users.
+
+    Request Body:
+    {
+        "user_list": [
+            {
+                "vk_id": int,
+                "name": str,
+                "last_name": str,
+                "username": str
+            },
+            ...
+        ]
+    }
+
+    Response Body:
+    {
+        "user_list": [
+            {
+                "id": int,
+                "vk_id": int,
+                "name": str,
+                "last_name": str,
+                "username": str
+            },
+            ...
+        ]
+    }
+    """
+
+    @request_schema(schema=UserFullListCreateSchema)
+    @response_schema(schema=UserManySchema, code=201)
     async def post(self) -> Response:
         """
-        :return: Response
+        Create multiple users.
+
+        :return: Response object
         """
         user_list = self.data["user_list"]
         created_user_list = await self.store.user.create_user(user=user_list)
@@ -68,11 +171,37 @@ class UserCreateManyView(View):
 
 
 class UserUpdateView(View):
-    @request_schema(UserFullUpdateSchema)
-    @response_schema(UserSchema, 200)
+    """
+    A view to update an existing user.
+
+    Request Body:
+    {
+        "user": {
+            "id": int,
+            "vk_id": int,
+            "name": str,
+            "last_name": str,
+            "username": str
+        }
+    }
+
+    Response Body:
+    {
+        "id": int,
+        "vk_id": int,
+        "name": str,
+        "last_name": str,
+        "username": str
+    }
+    """
+
+    @request_schema(schema=UserFullUpdateSchema)
+    @response_schema(schema=UserSchema, code=200)
     async def post(self) -> Response:
         """
-        :return:
+        Update an existing user.
+
+        :return: Response object
         """
         user = self.data["user"]
         updated_user = await self.store.user.update_user(user=user)
@@ -80,11 +209,59 @@ class UserUpdateView(View):
 
 
 class UserUpdateManyView(View):
-    @request_schema(UserFullListUpdateSchema)
-    @response_schema(UserManySchema, 200)
+    """
+    View for updating multiple user records.
+
+    Request:
+    - user_list (list): A list of dictionaries representing the user records to update.
+
+    Response:
+    - user_list (list): A list of dictionaries representing the updated user records.
+
+    Example:
+    Request:
+    {
+        "user_list": [
+            {
+                "username": "johndoe",
+                "email": "johndoe@example.com",
+                "age": 35
+            },
+            {
+                "username": "janedoe",
+                "email": "janedoe@example.com",
+                "age": 28
+            }
+        ]
+    }
+
+    Response:
+    {
+        "user_list": [
+            {
+                "id": 1,
+                "username": "johndoe",
+                "email": "johndoe@example.com",
+                "age": 35
+            },
+            {
+                "id": 2,
+                "username": "janedoe",
+                "email": "janedoe@example.com",
+                "age": 28
+            }
+        ]
+    }
+    """
+
+    @request_schema(schema=UserFullListUpdateSchema)
+    @response_schema(schema=UserManySchema, code=200)
     async def post(self) -> Response:
         """
-        :return: Response
+        Update multiple user records.
+
+        Returns:
+        Response: The updated user records.
         """
         user_list = self.data["user_list"]
         updated_user_list = await self.store.user.update_user(user=user_list)
@@ -93,11 +270,38 @@ class UserUpdateManyView(View):
 
 
 class UserDeleteView(View):
-    @request_schema(UserIdSchema)
-    @response_schema(UserSchema, 200)
+    """
+    View for deleting a single user record.
+
+    Request:
+    - user_id (int): The ID of the user to delete.
+
+    Response:
+    - user (dict): A dictionary representing the deleted user record.
+
+    Example:
+    Request:
+    {
+        "user_id": 1
+    }
+
+    Response:
+    {
+        "id": 1,
+        "username": "johndoe",
+        "email": "johndoe@example.com",
+        "age": 35
+    }
+    """
+
+    @request_schema(schema=UserIdSchema)
+    @response_schema(schema=UserSchema, code=200)
     async def post(self) -> Response:
         """
-        :return: Response
+        Delete a single user record.
+
+        Returns:
+        Response: The deleted user record.
         """
         user_id = self.data["user_id"]
         deleted_user = await self.store.user.delete_user(user_id=user_id)
@@ -105,11 +309,46 @@ class UserDeleteView(View):
 
 
 class UserDeleteManyView(View):
-    @request_schema(UserIdListSchema)
-    @response_schema(UserManySchema, 200)
+    """
+    View for deleting multiple users by their IDs.
+
+    The view expects a POST request with a JSON payload containing a list of user IDs:
+
+    Example request body:
+    {
+        "user_id_list": [1, 2, 3]
+    }
+
+    The view returns a JSON response with a list of deleted users in the response body:
+
+    Example response body:
+    {
+        "user_list": [
+            {
+                "id": 1,
+                "username": "johndoe",
+                "email": "johndoe@example.com",
+                "first_name": "John",
+                "last_name": "Doe"
+            },
+            {
+                "id": 2,
+                "username": "janedoe",
+                "email": "janedoe@example.com",
+                "first_name": "Jane",
+                "last_name": "Doe"
+            }
+        ]
+    }
+    """
+
+    @request_schema(schema=UserIdListSchema)
+    @response_schema(schema=UserManySchema, code=200)
     async def post(self) -> Response:
         """
-        :return: Response
+        Delete multiple users by their IDs.
+
+        Returns a list of deleted users in the response body.
         """
         user_id_list = self.data["user_id_list"]
         deleted_user_list = await self.store.user.delete_user(

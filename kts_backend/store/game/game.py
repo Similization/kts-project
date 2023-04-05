@@ -257,30 +257,35 @@ class PoleChuDesGame:
 
     async def guess_letter_result(self, letter: str) -> bool:
         """
-        Guess letter result
-        :param letter: str
-        :return: bool
+        Guesses a letter and updates the game state.
+
+        Args:
+            letter (str): The letter to guess.
+
+        Returns:
+            bool: True if the guess is correct, False otherwise.
         """
         lower_letter = letter.lower()
         lower_answer = self.game.game_data.answer.lower()
-        if (
-            lower_letter in self.guessed_letters
-            or lower_letter not in lower_answer
-        ):
+
+        # If letter has already been guessed or is not in the answer, return False
+        if lower_letter in self.guessed_letters or lower_letter not in lower_answer:
             return False
+
+        # Add letter to guessed letters and update guessed word
         self.guessed_letters.add(lower_letter)
         for i in range(len(lower_answer)):
             if lower_answer[i] != letter:
                 continue
             self.guessed_word = (
-                self.guessed_word[:i] + letter + self.guessed_word[i + 1 :]
+                    self.guessed_word[:i] + letter + self.guessed_word[i + 1:]
             )
         return True
 
     @staticmethod
     def generate_points() -> int:
         """
-        Generate random points
+        Generate a random number of points between 10 and 50 (inclusive) in multiples of 10.
         :return: int
         """
         return randint(1, 5) * 10

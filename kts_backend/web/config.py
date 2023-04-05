@@ -14,22 +14,33 @@ if typing.TYPE_CHECKING:
 
 def setup_config(app: "Application", config: dict) -> None:
     """
-    Setup application configuration
-    :param app: Application
-    :param config: dict
+    Set up the configuration for the application.
+
+    :param app: The Flask application instance.
+    :type app: Application
+    :param config: A dictionary containing the configuration options for the application.
+    :type config: dict
     :return: None
     """
+    admin_config = AdminConfig(
+        email=config["admin"]["email"],
+        password=config["admin"]["password"],
+    )
+
+    bot_config = BotConfig(
+        token=config["bot"]["key"],
+        group_id=config["bot"]["group_id"],
+    )
+
+    database_config = DatabaseConfig(**config["database"])
+
+    session_config = SessionConfig(
+        key=config["session"]["key"],
+    )
+
     app.config = Config(
-        admin=AdminConfig(
-            email=config["admin"]["email"],
-            password=config["admin"]["password"],
-        ),
-        bot=BotConfig(
-            token=config["bot"]["key"],
-            group_id=config["bot"]["group_id"],
-        ),
-        database=DatabaseConfig(**config["database"]),
-        session=SessionConfig(
-            key=config["session"]["key"],
-        ),
+        admin=admin_config,
+        bot=bot_config,
+        database=database_config,
+        session=session_config,
     )

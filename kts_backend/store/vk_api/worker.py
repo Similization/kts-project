@@ -16,6 +16,14 @@ from kts_backend.store.vk_api.poller import QUEUE_NAME
 
 
 class Worker:
+    """
+       A worker class that consumes messages from a message queue and
+       handles them using a given store.
+
+       Args:
+           store (Store): The store instance that will be used to handle updates.
+           concurrent_workers (int): The number of concurrent worker tasks to run.
+       """
     def __init__(self, store: Store, concurrent_workers: int):
         """
         :param store: Store
@@ -30,9 +38,22 @@ class Worker:
 
     async def start(self, retry_delay: int = 5) -> None:
         """
-        Set up message queue connection and start worker tasks
-        :return: None
+        Connects to the message queue and starts the worker tasks.
+
+        Args:
+            retry_delay (int): The number of seconds to wait before retrying
+                the connection in case of failure.
+
+        Returns:
+            None.
+
+        Raises:
+            exceptions.AMQPConnectionError: If the connection to the message
+                queue cannot be established after retrying for `retry_delay`
+                seconds.
         """
+
+        # Attempt to connect to the message queue.
         while True:
             try:
                 self.connection = await connect(host="localhost", port=5672)
@@ -43,6 +64,7 @@ class Worker:
                 )
                 await asyncio.sleep(retry_delay)
 
+        # Start the bots manager and set up the worker tasks.
         await self.store.bots_manager.start()
         async with self.connection:
             self.channel: AbstractChannel = await self.connection.channel()
@@ -57,12 +79,20 @@ class Worker:
 
     async def callback(self, message: AbstractIncomingMessage) -> None:
         """
-        Process message received from message queue
-        :param message: IncomingMessage
-        :return: None
+        Process message received from message queue.
+
+        Args:
+            message (AbstractIncomingMessage): The incoming message to process.
+
+        Returns:
+            None
         """
-        body_to_dict = json.loads(message.body)
-        update_object_dict = body_to_dict["object"]
+        try:
+            body_to_dict = json.loads(message.body)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Failed to decode message body: {exc}") from exc
+
+        update_object_dict = body_to_dict["update_object"]
         update_object = UpdateObject(
             id=update_object_dict["id"],
             user_id=update_object_dict["user_id"],
@@ -70,56 +100,40 @@ class Worker:
             peer_id=update_object_dict["peer_id"],
             body=update_object_dict["body"],
         )
-        update = Update(type=body_to_dict["type"], object=update_object)
+        update = Update(type=body_to_dict["type"], update_object=update_object)
         await self.handle_update(updates=update)
 
     async def handle_update(
         self, updates: List[Update] | Update | None
     ) -> None:
         """
-        Handle updates received from message queue
-        :param updates: List[Update]
-        :return: None
+        Handle updates received from message queue.
+
+        Args:
+            updates (List[Update] | Update | None): The updates to handle.
+
+        Returns:
+            None
         """
         await self.store.bots_manager.handle_updates(updates=updates)
 
     async def _worker(self) -> None:
         """
-        :return: None
+          A worker task that consumes messages from the queue and passes them
+          to the callback function.
+
+          Returns:
+            None
         """
         while True:
             await self.queue.consume(callback=self.callback, no_ack=True)
 
     async def stop(self) -> None:
         """
-        :return: None
+        Cancels all worker tasks and closes the message queue connection.
+
+        :returns: None
         """
         for task in self._tasks:
             task.cancel()
         await self.connection.close()
-
-
-# async def main() -> None:
-#     # Perform connection
-#     connection = await connect("amqp://guest:guest@localhost/")
-#
-#     async with connection:
-#         # Creating a channel
-#         channel = await connection.channel()
-#         await channel.set_qos(prefetch_count=1)
-#
-#         # Declaring queue
-#         queue = await channel.declare_queue(
-#             "task_queue",
-#             durable=True,
-#         )
-#
-#         # Start listening the queue with name 'task_queue'
-#         await queue.consume(on_message)
-#
-#         print(" [*] Waiting for messages. To exit press CTRL+C")
-#         await asyncio.Future()
-#
-#
-# if __name__ == "__main__":
-#     asyncio.run(main())

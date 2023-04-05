@@ -1,6 +1,5 @@
 import json
-from copy import deepcopy
-from typing import List
+from typing import List, Dict
 from dataclasses import dataclass
 
 from kts_backend.store.vk_api.vk_button import (
@@ -18,12 +17,13 @@ class VkKeyboard:
         buttons: List[List[VkButton]],
         one_time: bool = False,
         inline: bool = False,
-    ):
+    ) -> None:
         """
-        Initialize VkKeyboard object, using:
-        :param buttons: List[List[VkButton]]
-        :param one_time: bool
-        :param inline: bool
+        Initialize VkKeyboard object.
+
+        :param buttons: A list of button rows, where each row is a list of VkButton objects.
+        :param one_time: A flag to indicate whether the keyboard should be hidden after use.
+        :param inline: A flag to indicate whether the keyboard should be displayed inline with the message.
         """
         self.one_time: bool = one_time
         self.inline: bool = inline
@@ -31,31 +31,23 @@ class VkKeyboard:
 
     def convert_to_string(self) -> str:
         """
-        Convert VkKeyboard object to str, used in vk
-        :return: str
+        Convert VkKeyboard object to a JSON string.
+
+        :return: A JSON string representing the VkKeyboard object.
         """
-        keyboard: dict = deepcopy(self.__dict__)
-        keyboard_buttons: List = []
-        for button_list in self.buttons[:]:
-            new_list = []
-            for button in button_list:
-                new_list.append(button.convert_to_dict())
-            keyboard_buttons.append(new_list)
-        keyboard["buttons"] = keyboard_buttons
-
-        keyboard: bytes = json.dumps(obj=keyboard, ensure_ascii=False).encode(
-            "utf-8"
-        )
-        keyboard: str = str(keyboard.decode("utf-8"))
-        return keyboard
+        buttons = [[button.convert_to_dict() for button in row] for row in self.buttons]
+        keyboard = {"buttons": buttons, "one_time": self.one_time, "inline": self.inline}
+        return json.dumps(keyboard, ensure_ascii=False)
 
 
-KEYBOARD_CREATE = VkKeyboard(
-    one_time=True, inline=False, buttons=[[CREATE_GAME_BUTTON]]
-).convert_to_string()
-KEYBOARD_JOIN = VkKeyboard(
-    one_time=True, inline=False, buttons=[[JOIN_GAME_BUTTON]]
-).convert_to_string()
-KEYBOARD_FINISH = VkKeyboard(
-    one_time=True, inline=False, buttons=[[FINISH_GAME_BUTTON]]
-).convert_to_string()
+VK_KEYBOARDS: Dict[str, str] = {
+    "KEYBOARD_CREATE": VkKeyboard(
+        one_time=True, inline=False, buttons=[[CREATE_GAME_BUTTON]]
+    ).convert_to_string(),
+    "KEYBOARD_JOIN": VkKeyboard(
+        one_time=True, inline=False, buttons=[[JOIN_GAME_BUTTON]]
+    ).convert_to_string(),
+    "KEYBOARD_FINISH": VkKeyboard(
+        one_time=True, inline=False, buttons=[[FINISH_GAME_BUTTON]]
+    ).convert_to_string(),
+}

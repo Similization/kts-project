@@ -1,5 +1,6 @@
 import json
 import typing
+from typing import Dict
 from json import JSONDecodeError
 
 from aiohttp.web_exceptions import (
@@ -27,18 +28,19 @@ if typing.TYPE_CHECKING:
 @middleware
 async def auth_middleware(request: "Request", handler: callable):
     """
-    Authorization middlewares
+    Authorization middleware.
+
     :param request: Request
     :param handler: callable
     :return:
     """
     session = await get_session(request)
     if session:
-        request.admin = Admin.from_session(session=session.__dict__)
+        request.admin = Admin.from_session(session=session)
     return await handler(request)
 
 
-HTTP_ERROR_CODES = {
+HTTP_ERROR_CODES: Dict[int, str] = {
     400: "bad_request",
     401: "unauthorized",
     403: "forbidden",
@@ -52,7 +54,8 @@ HTTP_ERROR_CODES = {
 @middleware
 async def error_handling_middleware(request: "Request", handler: callable):
     """
-    Error handling middleware
+    Error handling middleware.
+
     :param request: Request
     :param handler:
     :return: callable
@@ -107,8 +110,7 @@ async def error_handling_middleware(request: "Request", handler: callable):
             message=e.reason,
             data=e.text,
         )
-    except Exception | HTTPException as e:
-        print(e)
+    except HTTPException:
         return error_json_response(
             http_status=500,
             status=HTTP_ERROR_CODES[500],
@@ -117,10 +119,16 @@ async def error_handling_middleware(request: "Request", handler: callable):
 
 def setup_middlewares(app: "Application") -> None:
     """
-    Setup middlewares for an application
-    :param app: Application
+    Setup middlewares for an application.
+
+    The middlewares are added in the following order:
+    1. Authentication middleware (auth_middleware)
+    2. Error handling middleware (error_handling_middleware)
+    3. Validation middleware (validation_middleware)
+
+    :param app: An instance of the Application class or a subclass of it.
     :return: None
     """
-    # app.middlewares.append(auth_middleware)
+    app.middlewares.append(auth_middleware)
     app.middlewares.append(error_handling_middleware)
     app.middlewares.append(validation_middleware)

@@ -1,25 +1,35 @@
-from typing import Optional, List
+from typing import List
 
 from aiohttp_apispec import request_schema, response_schema
 
-from kts_backend.game.dataclasses import (
-    GameData,
-)
-from kts_backend.game.schema import (
-    GameDataSchema,
-    GameDataListSchema,
-)
+from kts_backend.game.dataclasses import GameData
+from kts_backend.game.schema import GameDataSchema, GameDataListSchema
 from kts_backend.web.app import View
 from kts_backend.web.util import json_response
 
 
 class GameDataAddView(View):
-    @request_schema(GameDataSchema)
-    @response_schema(GameDataSchema, 200)
+    @request_schema(schema=GameDataSchema)
+    @response_schema(schema=GameDataSchema, code=200)
     async def post(self):
         """
-        Create new GameData object in database with question and answer fields
-        :return: GameDataSchema
+        Creates a new GameData object in the database with question and answer fields.
+
+        Request Body:
+        {
+            "question": str,
+            "answer": str
+        }
+
+        Response Body:
+        {
+            "id": int,
+            "question": str,
+            "answer": str
+        }
+
+        Returns:
+        A JSON response with the newly created GameData object.
         """
         question = self.data["question"]
         answer = self.data["answer"]
@@ -30,15 +40,29 @@ class GameDataAddView(View):
 
 
 class GameDataListGetView(View):
-    @response_schema(GameDataListSchema, 200)
+    @response_schema(schema=GameDataListSchema, code=200)
     async def get(self):
         """
-        Get list of GameData object from database
-        :return: GameDataListSchema
+        Gets a list of GameData objects from the database.
+
+        Response Body:
+        {
+            "game_data_list": [
+                {
+                    "id": int,
+                    "question": str,
+                    "answer": str
+                },
+                ...
+            ]
+        }
+
+        Returns:
+        A JSON response with the list of GameData objects.
         """
-        game_data_list: Optional[
-            List[GameData]
-        ] = await self.store.game.get_game_data_list()
+        game_data_list: List[
+            GameData
+        ] | None = await self.store.game.get_game_data_list()
         raw_data = [
             GameDataSchema().dump(game_data) for game_data in game_data_list
         ]
