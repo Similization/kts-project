@@ -14,12 +14,13 @@ from kts_backend.game.dataclasses import (
     GameData,
     Player,
 )
+from kts_backend.store import Store
 from kts_backend.user.dataclasses import User
 from kts_backend.user.model import UserModel
 
 
 @pytest.fixture
-def users(store) -> list[User]:
+def users(store: Store) -> list[User]:
     """
     :param store:
     :return:
@@ -44,36 +45,68 @@ def users(store) -> list[User]:
 
 
 @pytest.fixture
-def players_1(store) -> list[Player]:
+def players_1(store: Store, user_1: User, user_2: User) -> list[PlayerModel]:
     """
+    :param user_2:
+    :param user_1:
     :param store:
     :return:
     """
     return [
-        Player(
-            id=1, user_id=1, score=25, game_id=2, in_game=True, is_winner=False
+        PlayerModel(
+            id=1,
+            user_id=user_1.id,
+            score=25,
+            game_id=2,
+            in_game=True,
+            is_winner=False,
         ),
-        Player(
-            id=2, user_id=2, score=75, game_id=2, in_game=True, is_winner=False
+        PlayerModel(
+            id=2,
+            user_id=user_2.id,
+            score=75,
+            game_id=2,
+            in_game=True,
+            is_winner=False,
         ),
     ]
 
 
 @pytest.fixture
-def players_2(store) -> list[Player]:
+def players_2(
+    store: Store, user_1: User, user_2: User, user_3: User
+) -> list[PlayerModel]:
     """
+    :param user_3:
+    :param user_2:
+    :param user_1:
     :param store:
     :return:
     """
     return [
-        Player(
-            id=1, user_id=1, score=35, game_id=3, in_game=True, is_winner=False
+        PlayerModel(
+            id=1,
+            user_id=user_1.id,
+            score=35,
+            game_id=3,
+            in_game=True,
+            is_winner=False,
         ),
-        Player(
-            id=2, user_id=2, score=70, game_id=3, in_game=True, is_winner=False
+        PlayerModel(
+            id=2,
+            user_id=user_2.id,
+            score=70,
+            game_id=3,
+            in_game=True,
+            is_winner=False,
         ),
-        Player(
-            id=3, user_id=3, score=45, game_id=3, in_game=True, is_winner=False
+        PlayerModel(
+            id=3,
+            user_id=user_3.id,
+            score=45,
+            game_id=3,
+            in_game=True,
+            is_winner=False,
         ),
     ]
 
@@ -132,7 +165,7 @@ async def user_3(db_session: AsyncSession) -> User:
     :param db_session:
     :return:
     """
-    vk_id = 239360735
+    vk_id = 239360737
     name = "Анна"
     last_name = "Панн"
     username = "@pannanna"
@@ -272,6 +305,7 @@ async def game_2(
     async with db_session.begin() as session:
         session.add(new_game)
 
+    async with db_session.begin() as session:
         for player in players_1:
             player.game_id = new_game.id
             session.add(player)
@@ -302,6 +336,47 @@ async def game_3(
     """
     game_data_id = game_data_3.id
     chat_id: str = "2"
+    # finished_at = datetime.datetime.strptime(
+    #     "2023-02-24 20:02:22.000000",
+    #     "%Y-%m-%d %H:%M:%S.%f",
+    # )
+
+    new_game = GameModel(game_data_id=game_data_id, chat_id=chat_id)
+
+    async with db_session.begin() as session:
+        session.add(new_game)
+
+    async with db_session.begin() as session:
+        for player in players_2:
+            player.game_id = new_game.id
+            session.add(player)
+
+    return Game(
+        id=new_game.id,
+        game_data_id=game_data_id,
+        created_at=new_game.created_at,
+        finished_at=new_game.finished_at,
+        chat_id=chat_id,
+        chat_message_id=new_game.chat_message_id,
+        guessed_word=new_game.guessed_word,
+        required_player_count=new_game.required_player_count,
+        previous_player_id=players_2[0].id,
+        player_list=players_2,
+    )
+
+
+@pytest.fixture
+async def game_4(
+    db_session: AsyncSession, players_2: List[Player], game_data_3: GameData
+) -> Game:
+    """
+    :param db_session:
+    :param players_2:
+    :param game_data_3:
+    :return:
+    """
+    game_data_id = game_data_3.id
+    chat_id: str = "2"
     finished_at = datetime.datetime.strptime(
         "2023-02-24 20:02:22.000000",
         "%Y-%m-%d %H:%M:%S.%f",
@@ -314,6 +389,7 @@ async def game_3(
     async with db_session.begin() as session:
         session.add(new_game)
 
+    async with db_session.begin() as session:
         for player in players_2:
             player.game_id = new_game.id
             session.add(player)
@@ -359,8 +435,11 @@ async def player_1(
 
 
 @pytest.fixture
-async def player_2(db_session: AsyncSession, game_2: Game) -> Player:
+async def player_2(
+    db_session: AsyncSession, user_2: User, game_2: Game
+) -> Player:
     """
+    :param user_2:
     :param db_session:
     :param game_2:
     :return:
@@ -381,8 +460,11 @@ async def player_2(db_session: AsyncSession, game_2: Game) -> Player:
 
 
 @pytest.fixture
-async def player_3(db_session: AsyncSession, game_1: Game) -> Player:
+async def player_3(
+    db_session: AsyncSession, user_3: User, game_1: Game
+) -> Player:
     """
+    :param user_3:
     :param db_session:
     :param game_1:
     :return:

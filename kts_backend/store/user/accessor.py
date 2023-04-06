@@ -126,11 +126,11 @@ class UserAccessor(BaseAccessor):
         return None
 
     async def get_user_list_by_vk_id_list(
-        self, vk_id_list: List[str]
+        self, vk_id_list: List[int]
     ) -> List[User]:
         """
         Get User object list from database by vk_id list
-        :param vk_id_list: List[str]
+        :param vk_id_list: List[int]
         :return: List[User]
         """
         statement = select(UserModel).where(UserModel.vk_id.in_(vk_id_list))

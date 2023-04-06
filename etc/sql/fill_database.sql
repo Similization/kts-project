@@ -1,10 +1,10 @@
--- truncate game_data cascade;
+truncate game_data cascade;
 truncate game cascade;
 truncate "user" cascade;
 truncate admin cascade;
 truncate player cascade;
 --
--- alter sequence game_data_id_seq restart with 1;
+alter sequence game_data_id_seq restart with 1;
 alter sequence game_id_seq restart with 1;
 alter sequence user_id_seq restart with 1;
 alter sequence admin_id_seq restart with 1;

@@ -111,6 +111,10 @@ class BotManager:
                 ] = await self.app.store.vk_api.get_chat_users(
                     chat_id=int(update.update_object.peer_id)
                 )
+                username_list = [
+                    username[username.find("@") : -1]
+                    for username in username_list
+                ]
                 profile_dicts: List[dict] = [
                     {
                         "vk_id": profile["id"],
@@ -119,7 +123,25 @@ class BotManager:
                         "username": "@" + profile["screen_name"],
                     }
                     for profile in profiles
+                    if "@" + profile["screen_name"] in username_list
                 ]
+                actual_usernames = [
+                    profile_dict["username"] for profile_dict in profile_dicts
+                ]
+                if len(actual_usernames) < len(username_list):
+                    await self.app.store.vk_api.send_message(
+                        message=Message(
+                            user_id=update.update_object.user_id,
+                            peer_id=update.update_object.peer_id,
+                            text=parse_text(
+                                text="Проверьте указанные username, "
+                                "вероятно вы допустили ошибку в них, перепроверье:\n"
+                                f"{set(username_list) - set(actual_usernames)}\n\n"
+                                + text
+                            ),
+                        )
+                    )
+                    return
                 created_game: Game = await self.app.store.game.create_game(
                     game_data_id=random_game_data.id,
                     answer=random_game_data.answer,

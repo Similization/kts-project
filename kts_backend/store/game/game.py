@@ -40,7 +40,8 @@ class PoleChuDesGame:
         self.game_data = self.game.game_data
         self.guessed_word = game.guessed_word
         self.guessed_letters = set(self.guessed_word)
-        self.guessed_letters.remove("*")
+        if "*" in self.guessed_letters:
+            self.guessed_letters.remove("*")
 
     async def get_player(self, player_id: int) -> PlayerFull | None:
         """
