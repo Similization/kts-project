@@ -15,6 +15,7 @@ from kts_backend.store.vk_api.dataclasses import Update, UpdateObject
 from kts_backend.store.vk_api.poller import QUEUE_NAME
 
 
+# Delete all documentation, use best practise and asyncpool
 class Worker:
     """
     A worker class that consumes messages from a message queue and

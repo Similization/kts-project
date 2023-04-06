@@ -71,15 +71,13 @@ class PoleChuDesGame:
         Get game players, which status is in_game
         :return: List[PlayerFull]
         """
-        return [player for player in self.players if player.in_game]
+        return list(filter(lambda player: player.in_game, self.players))
 
     async def next_player(self) -> None:
         """
         Set next player
         :return: None
         """
-        # подразумевается, что после того как останется один игрок - игра завершится,
-        # поэтому переходить к следующему игроку смысла нет
         next_player_id = (self.current_player_id + 1) % len(self.players)
         while not self.players[next_player_id].in_game:
             next_player_id = (next_player_id + 1) % len(self.players)

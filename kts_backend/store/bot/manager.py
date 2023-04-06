@@ -22,10 +22,29 @@ PARSE_COMMANDS: dict = {
 
 
 class BotManager:
+    """
+    A class representing a bot manager for a PoleChudes game.
+
+    Args:
+        app (Application): An instance of the Application class.
+
+    Attributes:
+        app (Application): An instance of the Application class.
+        bot (None): An instance of the VK Bot API.
+        game_list (List[PoleChuDesGame]): A list of all PoleChuDesGame instances associated with the bot.
+        logger (Logger): An instance of the Python logger.
+
+    """
+
     def __init__(self, app: "Application"):
         """
-        Initialize BotManager object, using app
-        :param app: Application
+        Initialize a BotManager object with the given application instance.
+
+        Args:
+            app (Application): An instance of the Application class.
+
+        Returns:
+            None
         """
         self.app = app
         self.bot = None
@@ -34,8 +53,11 @@ class BotManager:
 
     async def start(self) -> None:
         """
-        Get all unfinished games and create PoleChuDes objects for each entity
-        :return: None
+        Asynchronously retrieve all unfinished games from the database and create new PoleChuDesGame objects
+        from them. Add each new game object to the game_list attribute.
+
+        Returns:
+            None
         """
         game_list: List[
             GameFull
@@ -53,20 +75,58 @@ class BotManager:
 
     async def get_game_by_chat_id(self, chat_id: str) -> PoleChuDesGame | None:
         """
-        Get game from self.game_list by chat_id
-        :param chat_id: int
-        :return: PoleChuDesGame | None
+        Asynchronously search for a PoleChuDesGame instance in the game_list attribute using the provided chat_id.
+
+        Args:
+            chat_id (str): The chat ID to search for.
+
+        Returns:
+            PoleChuDesGame: A PoleChuDesGame instance if found.
+            None: If no PoleChuDesGame instance was found.
         """
         for game in self.game_list:
             if game.game.chat_id == chat_id:
                 return game
         return None
 
+    async def send_message(self, update, message_text, keyboard=None):
+        """
+        Asynchronously send a message to a VK user.
+
+        Args:
+            update (Update): An instance of the Update class.
+            message_text (str): The message text to send.
+            keyboard (Optional[List[List[str]]]): A keyboard to attach to the message.
+
+        Returns:
+            None
+        """
+        message = Message(
+            user_id=update.update_object.user_id,
+            peer_id=update.update_object.peer_id,
+            text=parse_text(text=message_text),
+        )
+        await self.app.store.vk_api.send_message(
+            message=message, keyboard=keyboard
+        )
+
     async def check_update(self, update: Update):
+        """
+        Asynchronously check for a new update to a VK chat.
+
+        Args:
+            update (Update): An instance of the Update class.
+
+        Returns:
+            None
+        """
+
+        # Try to retrieve the game associated with the chat id from the database
         game: PoleChuDesGame | None = await self.get_game_by_chat_id(
             chat_id=update.update_object.peer_id
         )
 
+        # If the game is not found, display instructions for starting a new game
         if game is None:
             text = (
                 "Для того, чтобы создать игру - напишите:\n"
@@ -75,37 +135,35 @@ class BotManager:
                 "Максимальное число игроков - 5\n"
                 "@username пользователей необходимо указывать через запятую с пробелом"
             )
+            # If the user is trying to start a game, extract the usernames from the message
             body = update.update_object.body
             if body.startswith(PARSE_COMMANDS["start"]):
                 username_list = body[len(PARSE_COMMANDS["start"]) :].split(", ")
                 count_of_players = len(username_list)
+
+                # If there are too many players, send a message to the user and return
                 if count_of_players > MAX_PLAYER_COUNT:
-                    await self.app.store.vk_api.send_message(
-                        message=Message(
-                            user_id=update.update_object.user_id,
-                            peer_id=update.update_object.peer_id,
-                            text=parse_text(
-                                text="Игроков слишком много!\n\n" + text
-                            ),
-                        )
+                    await self.send_message(
+                        update=update,
+                        message_text="Игроков слишком много!\n\n" + text,
                     )
                     return
+
+                # If there are too few players, send a message to the user and return
                 if count_of_players < MIN_PLAYER_COUNT:
-                    await self.app.store.vk_api.send_message(
-                        message=Message(
-                            user_id=update.update_object.user_id,
-                            peer_id=update.update_object.peer_id,
-                            text=parse_text(
-                                text="Игроков слишком мало!\n\n" + text
-                            ),
-                        )
+                    await self.send_message(
+                        update=update,
+                        message_text="Игроков слишком мало!\n\n" + text,
                     )
                     return
+
+                # Select a random game data from the database
                 game_data_list: List[
                     GameData
                 ] = await self.app.store.game.get_game_data_list()
                 random_game_data: GameData = choice(game_data_list)
-                # get users from bd if not exist - then create
+
+                # Get the profile information for each user in the chat
                 profiles: List[
                     dict
                 ] = await self.app.store.vk_api.get_chat_users(
@@ -125,21 +183,16 @@ class BotManager:
                     for profile in profiles
                     if "@" + profile["screen_name"] in username_list
                 ]
+
+                # Check if all the usernames in the message were found
                 actual_usernames = [
                     profile_dict["username"] for profile_dict in profile_dicts
                 ]
                 if len(actual_usernames) < len(username_list):
-                    await self.app.store.vk_api.send_message(
-                        message=Message(
-                            user_id=update.update_object.user_id,
-                            peer_id=update.update_object.peer_id,
-                            text=parse_text(
-                                text="Проверьте указанные username, "
-                                "вероятно вы допустили ошибку в них, перепроверье:\n"
-                                f"{set(username_list) - set(actual_usernames)}\n\n"
-                                + text
-                            ),
-                        )
+                    await self.send_message(
+                        update=update,
+                        message_text="Проверьте указанные username, вероятно вы допустили ошибку в них, перепроверье:\n"
+                        f"{set(username_list) - set(actual_usernames)}\n\n{text}",
                     )
                     return
                 created_game: Game = await self.app.store.game.create_game(
@@ -175,12 +228,9 @@ class BotManager:
                     f"Cлово: {new_pole_game.guessed_word}\n"
                     f"Первым ходит: {new_pole_game.current_player.user.username}"
                 )
-                await self.app.store.vk_api.send_message(
-                    message=Message(
-                        user_id=update.update_object.user_id,
-                        peer_id=update.update_object.peer_id,
-                        text=parse_text(result_string),
-                    ),
+                await self.send_message(
+                    update=update,
+                    message_text=result_string,
                     keyboard=VK_KEYBOARDS["KEYBOARD_FINISH"],
                 )
                 new_pole_game.game.chat_message_id = (
@@ -197,12 +247,9 @@ class BotManager:
                     peer_id=update.update_object.peer_id,
                 )
             else:
-                await self.app.store.vk_api.send_message(
-                    message=Message(
-                        user_id=update.update_object.user_id,
-                        peer_id=update.update_object.peer_id,
-                        text=parse_text(text=text),
-                    )
+                await self.send_message(
+                    update=update,
+                    message_text=text,
                 )
         else:
             results = [
@@ -211,13 +258,9 @@ class BotManager:
             ]
             if update.update_object.body.find(PARSE_COMMANDS["finish"]) != -1:
                 result_string = "Результаты игры:\n" + "\n".join(results) + "\n"
-                await self.app.store.vk_api.send_message(
-                    # message_id=game.game.chat_message_id,
-                    message=Message(
-                        user_id=update.update_object.user_id,
-                        peer_id=update.update_object.peer_id,
-                        text=parse_text(result_string),
-                    )
+                await self.send_message(
+                    update=update,
+                    message_text=result_string,
                 )
                 await self.finish_game(game)
                 return
@@ -234,18 +277,21 @@ class BotManager:
             if "Игра завершена" in res:
                 await self.finish_game(game)
                 keyboard = None
-
-            await self.app.store.vk_api.send_message(
-                # message_id=game.game.chat_message_id,
-                message=Message(
-                    user_id=update.update_object.user_id,
-                    peer_id=update.update_object.peer_id,
-                    text=parse_text(text=result_string),
-                ),
-                keyboard=keyboard,
+            await self.send_message(
+                update=update, message_text=result_string, keyboard=keyboard
             )
 
     async def finish_game(self, game: PoleChuDesGame):
+        """
+        Ends the current game session and updates the game leaderboard.
+
+        This method is called when the game is finished and a winner is declared.
+        It updates the leaderboard with the results of the game and resets the
+        game board and players for the next round.
+
+        Returns:
+            None
+        """
         await game.finish()
         self.game_list.remove(game)
 
@@ -253,11 +299,15 @@ class BotManager:
         self, updates: list[Update] | Update | None = None
     ) -> None:
         """
-        Handle updates.
+        Process the provided updates and delete the corresponding messages from the chat.
 
-        :param updates: A list of updates or a single update object. Defaults to None.
-        :type updates: list[Update] | Update | None
-        :return: None
+        Args:
+            updates (list[Update] | Update | None): A list of `Update` objects, a single `Update` object,
+                or None if there are no updates to process. If a single `Update` object is provided,
+                it will be converted to a list with a single element.
+
+        Returns:
+            None
         """
         # Return if no updates are provided
         if updates is None:

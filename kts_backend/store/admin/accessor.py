@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from hashlib import sha256
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update, delete
 
 from kts_backend.admin.dataclasses import Admin
 from kts_backend.admin.model import AdminModel
@@ -40,11 +40,11 @@ class AdminAccessor(BaseAccessor):
         statement = select(AdminModel).filter_by(email=email)
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            admin_model: AdminModel | None = res.scalar()
+        admin_model: AdminModel | None = res.scalar()
 
-            if admin_model:
-                return self.admin_model2admin(admin_model=admin_model)
-            return None
+        if admin_model:
+            return self.admin_model2admin(admin_model=admin_model)
+        return None
 
     async def get_or_create(self, email: str, password: str) -> Admin:
         """
@@ -66,11 +66,61 @@ class AdminAccessor(BaseAccessor):
         )
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)
-            admin_model: AdminModel | None = res.scalar()
+        admin_model: AdminModel | None = res.scalar()
         return self.admin_model2admin(admin_model=admin_model)
 
-    async def update_admin(self):
-        raise NotImplementedError
+    async def update_admin(
+        self, admin_id: int, email: str, password: str
+    ) -> Admin:
+        """
+        Update existing Admin object in database and return it
+        :param admin_id: int
+        :param email: str
+        :param password: str
+        :return: Admin
+        """
+        new_password = sha256(password.encode()).hexdigest()
+        statement = (
+            update(AdminModel)
+            .filter_by(id=admin_id)
+            .values(email=email, password=new_password)
+            .returning(AdminModel)
+        )
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+        admin_model: AdminModel | None = res.scalar()
+        return self.admin_model2admin(admin_model=admin_model)
 
-    async def delete_admin(self):
-        raise NotImplementedError
+    async def delete_admin(self, admin_id: int) -> Admin | None:
+        """
+        Delete Admin by id from database, otherwise return None
+        :param admin_id: int
+        :return: Admin | None
+        """
+        statement = (
+            delete(AdminModel).filter_by(id=admin_id).returning(AdminModel)
+        )
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+        admin_model: AdminModel | None = res.scalar()
+
+        if admin_model:
+            return self.admin_model2admin(admin_model=admin_model)
+        return None
+
+    async def delete_admin_by_email(self, email: str) -> Admin | None:
+        """
+        Delete Admin by email from database, otherwise return None
+        :param email: str
+        :return: Admin | None
+        """
+        statement = (
+            delete(AdminModel).filter_by(email=email).returning(AdminModel)
+        )
+        async with self.app.database.session.begin() as session:
+            res = await session.execute(statement=statement)
+        admin_model: AdminModel | None = res.scalar()
+
+        if admin_model:
+            return self.admin_model2admin(admin_model=admin_model)
+        return None
