@@ -10,7 +10,7 @@ from kts_backend.store import Store
 from tests.utils import check_empty_table_exists
 
 
-class TestPlayerStore:
+class TestGameStore:
     async def test_table_exists(self, cli):
         """
         :param cli:

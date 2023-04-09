@@ -53,7 +53,10 @@ class AdminCurrentView(View):
         Returns:
             Response: A JSON response with the serialized admin object.
         """
-        admin: Admin | None = await self.get_admin()
+        try:
+            admin: Admin | None = await self.get_admin()
+        except AttributeError:
+            raise HTTPUnauthorized
         if admin is None:
             raise HTTPUnauthorized
         return json_response(data=AdminSchema().dump(obj=admin))

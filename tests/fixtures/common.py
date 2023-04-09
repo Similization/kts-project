@@ -176,4 +176,4 @@ async def admin(cli, db_session, config: Config) -> Admin:
     async with db_session.begin() as session:
         session.add(new_admin)
 
-    return Admin(id=new_admin.id, email=new_admin.email)
+    return Admin(id=new_admin.id, email=new_admin.email, password=new_admin.password)

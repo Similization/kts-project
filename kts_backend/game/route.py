@@ -10,5 +10,5 @@ def setup_routes(app: Application) -> None:
     from kts_backend.game.view import GameDataAddView
     from kts_backend.game.view import GameDataListGetView
 
-    app.router.add_view(path="/game_data.add", handler=GameDataAddView)
+    app.router.add_view(path="/game_data.post", handler=GameDataAddView)
     app.router.add_view(path="/game_data.get", handler=GameDataListGetView)
