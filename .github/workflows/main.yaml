@@ -1,11 +1,65 @@
-name: Check homework
-on: [push]
+name: Check project
+
+on:
+  push:
+    branches:
+      - main
+#      - dev
+#      - init2
+      - init3
+
 jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: rickstaa/action-black@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Black
+        uses: rickstaa/action-black@v1
         with:
+          python-version: 3.10.7.final.0
           black_args: ". --check"
-          
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Set environment variables
+        run: |
+          echo "PYTHONPATH=$PYTHONPATH:/github/workspace" >> $GITHUB_ENV
+          echo "CONFIGPATH=$GITHUB_WORKSPACE/tests/config.yaml" >> $GITHUB_ENV
+
+      - name: Start PostgreSQL
+        uses: docker://postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: kts_project
+          PGDATA: /var/lib/postgresql/data/pgdata
+        with:
+          ports:
+            - 5432:5432
+          options: --name postgres-db
+
+      - name: Wait for PostgreSQL to start
+        uses: jakejarvis/wait-for-postgres@v1.1.0
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          PGDATABASE: kts_project
+
+      - name: Run migrations
+        env:
+          CONFIGPATH: ${{ env.CONFIGPATH }}
+        run: |
+          alembic upgrade head
+
+      - name: Run tests
+        env:
+          PYTHONPATH: ${{ env.PYTHONPATH }}
+          CONFIGPATH: ${{ env.CONFIGPATH }}
+        run: |
+          pytest

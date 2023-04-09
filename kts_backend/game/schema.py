@@ -1,31 +1,31 @@
 from marshmallow import Schema, fields
+from typing import List
 
 
-class PlayerRequestSchema(Schema):
-    vk_id = fields.Int(required=True)
+class GameDataByIdSchema(Schema):
+    """Schema for retrieving a single game data object by ID."""
+
+    id: int = fields.Int(required=True, description="The ID of the game data.")
 
 
-class PlayerResponseSchema(PlayerRequestSchema):
-    name = fields.Str(required=False)
-    last_name = fields.Str(required=False)
+class GameDataSchema(Schema):
+    """Schema for representing game data."""
+
+    id: int = fields.Int(required=False, description="The ID of the game data.")
+    question: str = fields.Str(
+        required=True, description="The question associated with the game data."
+    )
+    answer: str = fields.Str(
+        required=True, description="The answer associated with the game data."
+    )
 
 
-class PlayerListSchema(Schema):
-    players = fields.Nested(PlayerRequestSchema, many=True)
+class GameDataListSchema(Schema):
+    """Schema for representing a list of game data objects."""
 
-
-class GameScoreSchema(Schema):
-    id = fields.Int(required=True)
-    player = fields.Nested(PlayerResponseSchema, many=False, required=True)
-    game = fields.Nested("GameSchema", many=False, required=True)
-    score = fields.Int(required=False)
-
-
-class GameSchema(Schema):
-    game_id = fields.Int(required=False)
-    created_at = fields.DateTime(required=False)
-    chat_id = fields.Int(required=True)
-
-
-class GamePlayersSchema(GameSchema):
-    players = fields.Nested(PlayerResponseSchema, many=True, required=True)
+    game_data_list: List[GameDataSchema] = fields.Nested(
+        GameDataSchema,
+        many=True,
+        required=False,
+        description="A list of game data objects.",
+    )

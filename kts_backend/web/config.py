@@ -1,56 +1,46 @@
 import typing
-from dataclasses import dataclass
+
+from kts_backend.web.dataclasses import (
+    Config,
+    AdminConfig,
+    BotConfig,
+    DatabaseConfig,
+    SessionConfig,
+)
 
 if typing.TYPE_CHECKING:
     from kts_backend.web.app import Application
 
 
-@dataclass
-class SessionConfig:
-    key: str
+def setup_config(app: "Application", config: dict) -> None:
+    """
+    Set up the configuration for the application.
 
+    :param app: The Flask application instance.
+    :type app: Application
+    :param config: A dictionary containing the configuration options for the application.
+    :type config: dict
+    :return: None
+    """
+    admin_config = AdminConfig(
+        email=config["admin"]["email"],
+        password=config["admin"]["password"],
+    )
 
-# @dataclass
-# class AdminConfig:
-#     email: str
-#     password: str
+    bot_config = BotConfig(
+        token=config["bot"]["key"],
+        group_id=config["bot"]["group_id"],
+    )
 
+    database_config = DatabaseConfig(**config["database"])
 
-@dataclass
-class BotConfig:
-    token: str
-    group_id: int
+    session_config = SessionConfig(
+        key=config["session"]["key"],
+    )
 
-
-@dataclass
-class DatabaseConfig:
-    host: str
-    port: int
-    user: str
-    password: str
-    database: str
-
-
-@dataclass
-class Config:
-    # admin: AdminConfig
-    session: SessionConfig = None
-    bot: BotConfig = None
-    database: DatabaseConfig = None
-
-
-def setup_config(app: "Application", config: dict):
     app.config = Config(
-        session=SessionConfig(
-            key=config["session"]["key"],
-        ),
-        # admin=AdminConfig(
-        #     email=raw_config["admin"]["email"],
-        #     password=raw_config["admin"]["password"],
-        # ),
-        bot=BotConfig(
-            token=config["bot"]["key"],
-            group_id=config["bot"]["group_id"],
-        ),
-        database=DatabaseConfig(**config["database"]),
+        admin=admin_config,
+        bot=bot_config,
+        database=database_config,
+        session=session_config,
     )

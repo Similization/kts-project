@@ -1,12 +1,14 @@
-from kts_backend.game.view import (
-    GamePlayerListView,
-    GameCreateView,
-    GameLastView,
-)
 from kts_backend.web.app import Application
 
 
-def setup_routes(app: Application):
-    app.router.add_view("/game.players_in_chat", GamePlayerListView)
-    app.router.add_view("/game.create", GameCreateView)
-    app.router.add_view("/game.last", GameLastView)
+def setup_routes(app: Application) -> None:
+    """
+    Setup routes /game_data route.<method> for application
+    :param app: Application
+    :return: None
+    """
+    from kts_backend.game.view import GameDataAddView
+    from kts_backend.game.view import GameDataListGetView
+
+    app.router.add_view(path="/game_data.post", handler=GameDataAddView)
+    app.router.add_view(path="/game_data.get", handler=GameDataListGetView)

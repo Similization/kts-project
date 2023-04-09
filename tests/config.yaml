@@ -15,9 +15,15 @@ bot:
   key: vk1.a.zs5v3R9sNdoTDqrV5rwIfu3pEVPgduf7UNZ6Zb2kjmCdHpdox3f6DBqVkuqwFJosvuiM-Po4qu-ifnoWkwv4TF5L11KMMmkgOdADkKuX46QJ2BjQ35vO_atak15lcPvp8T_0gvF9BObpqqXn_AJN1O1H0Ua7KTfUEKiQlpmAEb4J-o-icV6Vl8ge6c2oiK65OA4a24N1HBF_xS3ECEeCOg
   group_id: 218765338
 
+admin:
+  email: borbri228@gmail.com
+  password: secret228
+
 database:
+  type: test
   host: 0.0.0.0
   port: 5432
   user: postgres
   password: mysecretpassword
   database: kts_project
+

@@ -1,52 +1,69 @@
-from typing import Optional, List
+from typing import List
 
-from aiohttp_apispec import request_schema
+from aiohttp_apispec import request_schema, response_schema
 
-from kts_backend.game.model import PlayerDC, GameDC
-from kts_backend.game.schema import (
-    PlayerResponseSchema,
-    GameSchema,
-    GamePlayersSchema,
-)
+from kts_backend.game.dataclasses import GameData
+from kts_backend.game.schema import GameDataSchema, GameDataListSchema
 from kts_backend.web.app import View
-from kts_backend.web.utils import json_response
+from kts_backend.web.util import json_response
 
 
-class GamePlayerListView(View):
-    @request_schema(GameSchema)
-    # @request_schema(PlayerListSchema)
+class GameDataAddView(View):
+    @request_schema(schema=GameDataSchema)
+    @response_schema(schema=GameDataSchema, code=200)
     async def post(self):
-        chat_id = self.data["chat_id"]
-        players: Optional[
-            List[PlayerDC]
-        ] = await self.store.game.get_players_by_chat_id(chat_id=chat_id)
-        raw_players = [
-            PlayerResponseSchema().dump(player) for player in players
-        ]
-        return json_response(data={"players": raw_players})
+        """
+        Creates a new GameData object in the database with question and answer fields.
 
+        Request Body:
+        {
+            "question": str,
+            "answer": str
+        }
 
-class GameCreateView(View):
-    @request_schema(GamePlayersSchema)
-    # @request_schema(GamePlayersSchema)
-    async def post(self):
-        players = [
-            PlayerDC(
-                vk_id=player["vk_id"],
-                name=player["name"],
-                last_name=player["last_name"],
-            )
-            for player in self.data["players"]
-        ]
-        chat_id = self.data["chat_id"]
-        game: Optional[GameDC] = await self.store.game.create_new_game(
-            players=players, chat_id=chat_id
+        Response Body:
+        {
+            "id": int,
+            "question": str,
+            "answer": str
+        }
+
+        Returns:
+        A JSON response with the newly created GameData object.
+        """
+        question = self.data["question"]
+        answer = self.data["answer"]
+        game_data: GameData = await self.store.game.create_game_data(
+            question=question, answer=answer
         )
-        return json_response(data={"game": GamePlayersSchema().dump(game)})
+        return json_response(data=GameDataSchema().dump(game_data))
 
 
-class GameLastView(View):
-    # @request_schema(GamePlayersSchema)
+class GameDataListGetView(View):
+    @response_schema(schema=GameDataListSchema, code=200)
     async def get(self):
-        game: Optional[GameDC] = await self.store.game.get_last_game()
-        return json_response(data={"last_game": GamePlayersSchema().dump(game)})
+        """
+        Gets a list of GameData objects from the database.
+
+        Response Body:
+        {
+            "game_data_list": [
+                {
+                    "id": int,
+                    "question": str,
+                    "answer": str
+                },
+                ...
+            ]
+        }
+
+        Returns:
+        A JSON response with the list of GameData objects.
+        """
+        game_data_list: List[
+            GameData
+        ] | None = await self.store.game.get_game_data_list()
+        raw_data = [
+            GameDataSchema().dump(game_data) for game_data in game_data_list
+        ]
+        return json_response(data={"game_data_list": raw_data})
