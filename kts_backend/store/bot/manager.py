@@ -1,4 +1,3 @@
-import asyncio
 import typing
 from logging import getLogger
 from random import choice
@@ -62,16 +61,17 @@ class BotManager:
         game_list: List[
             GameFull
         ] = await self.app.store.game.get_unfinished_game_list()
-        create_tasks = []
+        # create_tasks = []
         for game in game_list:
             if len(game.player_list) < game.required_player_count:
                 pass
             else:
                 new_game: PoleChuDesGame = PoleChuDesGame(app=self.app)
-                create_tasks.append(new_game.init_from(game=game))
+                await new_game.init_from(game=game)
+                # create_tasks.append(new_game)
                 self.game_list.append(new_game)
-        if create_tasks:
-            await asyncio.gather(*create_tasks)
+        # if create_tasks:
+        #     await asyncio.gather(*create_tasks)
 
     async def get_game_by_chat_id(self, chat_id: str) -> PoleChuDesGame | None:
         """
@@ -110,6 +110,18 @@ class BotManager:
             message=message, keyboard=keyboard
         )
 
+    async def update_message(
+        self, update, message_id, message_text, keyboard=None
+    ):
+        message = Message(
+            user_id=update.update_object.user_id,
+            peer_id=update.update_object.peer_id,
+            text=parse_text(text=message_text),
+        )
+        await self.app.store.vk_api.edit_message(
+            message_id=message_id, message=message, keyboard=keyboard
+        )
+
     async def check_update(self, update: Update):
         """
         Asynchronously check for a new update to a VK chat.
@@ -120,7 +132,6 @@ class BotManager:
         Returns:
             None
         """
-
         # Try to retrieve the game associated with the chat id from the database
         game: PoleChuDesGame | None = await self.get_game_by_chat_id(
             chat_id=update.update_object.peer_id
@@ -202,8 +213,15 @@ class BotManager:
                     required_player_count=count_of_players,
                 )
 
-                await self.app.store.game.create_player_list_by_user_info(
-                    game_id=created_game.id, users_info=profile_dicts
+                current_player_id = choice(
+                    await self.app.store.game.create_player_list_by_user_info(
+                        game_id=created_game.id, users_info=profile_dicts
+                    )
+                ).id
+
+                await self.app.store.game.update_game_by_kwargs(
+                    game_id=created_game.id,
+                    previous_player_id=current_player_id,
                 )
 
                 created_full_game: GameFull = (
@@ -262,6 +280,11 @@ class BotManager:
                     update=update,
                     message_text=result_string,
                 )
+                # await self.update_message(
+                #     update=update,
+                #     message_id=game.game.chat_message_id,
+                #     message_text=result_string
+                # )
                 await self.finish_game(game)
                 return
 
@@ -280,6 +303,12 @@ class BotManager:
             await self.send_message(
                 update=update, message_text=result_string, keyboard=keyboard
             )
+            # await self.update_message(
+            #     update=update,
+            #     message_id=game.game.chat_message_id,
+            #     message_text=result_string,
+            #     keyboard=keyboard
+            # )
 
     async def finish_game(self, game: PoleChuDesGame):
         """
@@ -323,7 +352,8 @@ class BotManager:
             await self.check_update(update=update)
             # await self.app.store.vk_api.get_history(chat_id=update.object.peer_id)
             # Delete the message from chat after processing
-            await self.app.store.vk_api.delete_message_from_chat(
-                message_ids=update.update_object.message_id,
-                chat_id=update.update_object.peer_id,
-            )
+
+            # await self.app.store.vk_api.delete_message_from_chat(
+            #     message_ids=update.update_object.message_id,
+            #     chat_id=update.update_object.peer_id,
+            # )

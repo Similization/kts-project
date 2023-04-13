@@ -3,10 +3,19 @@ from kts_backend.web.app import Application
 
 def setup_routes(app: Application) -> None:
     """
-    Setup routes /user route.<method> for application
-    :param app: Application
-    :return: None
+    Set up routes for user-related views in the web application.
+
+    This function adds views for various user-related operations such as getting, creating, updating, and deleting
+    users to the application's router. The views are defined in the `kts_backend.user.view` module and are added to the
+    router with their corresponding URL paths.
+
+    Parameters:
+        app (Application): The web application instance to which the routes will be added.
+
+    Returns:
+        None
     """
+
     from kts_backend.user.view import (
         UserGetView,
         UserGetManyView,

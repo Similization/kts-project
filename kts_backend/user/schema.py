@@ -3,7 +3,10 @@ from marshmallow import Schema, fields
 
 class UserIdSchema(Schema):
     """
-    Schema for User ID
+    Schema for representing a user ID.
+
+    Attributes:
+        id (int): User ID.
     """
 
     id = fields.Int(required=True, description="User ID")
@@ -11,7 +14,10 @@ class UserIdSchema(Schema):
 
 class UserIdListSchema(Schema):
     """
-    Schema for list of User IDs
+    Schema for representing a list of user IDs.
+
+    Attributes:
+        user_id_list (List[int]): List of user IDs.
     """
 
     user_id_list = fields.List(
@@ -23,7 +29,13 @@ class UserIdListSchema(Schema):
 
 class UserCreateSchema(Schema):
     """
-    Schema for creating a new user
+    Schema for creating a new user.
+
+    Attributes:
+        vk_id (int): VK ID of the user.
+        name (str): First name of the user.
+        last_name (str): Last name of the user.
+        username (str): Username of the user.
     """
 
     vk_id = fields.Int(required=True, description="VK ID of user")
@@ -34,7 +46,10 @@ class UserCreateSchema(Schema):
 
 class UserFullCreateSchema(Schema):
     """
-    Schema for creating a new user (full)
+    Schema representing the full details of a user to be created.
+
+    Attributes:
+        user (UserCreateSchema): Nested schema representing the details of the user to be created.
     """
 
     user = fields.Nested(
@@ -47,7 +62,10 @@ class UserFullCreateSchema(Schema):
 
 class UserFullListCreateSchema(Schema):
     """
-    Schema for creating a list of new users (full)
+    Schema representing a list of full details of users to be created.
+
+    Attributes:
+        user_list (List[UserCreateSchema]): Nested schema representing a list of details of users to be created.
     """
 
     user_list = fields.Nested(
@@ -60,7 +78,14 @@ class UserFullListCreateSchema(Schema):
 
 class UserUpdateSchema(Schema):
     """
-    Schema for updating an existing user
+    Schema representing the details of a user to be updated.
+
+    Attributes:
+        id (int): ID of the user to be updated.
+        vk_id (int): New VK ID of the user.
+        name (str): New first name of the user.
+        last_name (str): New last name of the user.
+        username (str): New username of the user.
     """
 
     id = fields.Int(required=True, description="ID of user to be updated")
@@ -72,7 +97,10 @@ class UserUpdateSchema(Schema):
 
 class UserFullUpdateSchema(Schema):
     """
-    Schema for updating an existing user (full)
+    Schema representing the full details of a user to be updated.
+
+    Attributes:
+        user (UserUpdateSchema): Nested schema representing the details of the user to be updated.
     """
 
     user = fields.Nested(
@@ -85,7 +113,10 @@ class UserFullUpdateSchema(Schema):
 
 class UserFullListUpdateSchema(Schema):
     """
-    Schema for updating a list of existing users (full)
+    Schema representing a list of full details of users to be updated.
+
+    Attributes:
+        user_list (List[UserUpdateSchema]): Nested schema representing a list of details of users to be updated.
     """
 
     user_list = fields.Nested(
@@ -98,7 +129,16 @@ class UserFullListUpdateSchema(Schema):
 
 class UserSchema(UserIdSchema):
     """
-    Schema for retrieving user details
+    Schema representing the details of a user.
+
+    Inherits from:
+        - UserIdSchema: Schema representing the user ID.
+
+    Attributes:
+        vk_id (int): VK ID of the user.
+        name (str): First name of the user.
+        last_name (str): Last name of the user.
+        username (str): Username of the user.
     """
 
     vk_id = fields.Int(required=False, description="VK ID of user")
@@ -109,7 +149,13 @@ class UserSchema(UserIdSchema):
 
 class UserManySchema(UserIdSchema):
     """
-    Schema for retrieving details of multiple users
+    Schema representing a list of users' details.
+
+    Inherits from:
+        - UserIdSchema: Schema representing the user ID.
+
+    Attributes:
+        user_list (List[UserSchema]): List of users' details.
     """
 
     user_list = fields.Nested(

@@ -35,13 +35,21 @@ class PoleChuDesGame:
         """
         self.game: GameFull = game
         self.players = game.player_list
-        self.current_player = choice(self.players)
-        self.current_player_id = self.players.index(self.current_player)
+        if game.previous_player is not None:
+            self.current_player = game.previous_player
+        else:
+            self.current_player = choice(self.players)
+        self.current_player_id = await self._get_init_player_id()
         self.game_data = self.game.game_data
         self.guessed_word = game.guessed_word
         self.guessed_letters = set(self.guessed_word)
         if "*" in self.guessed_letters:
             self.guessed_letters.remove("*")
+
+    async def _get_init_player_id(self) -> int:
+        for i in range(len(self.players)):
+            if self.players[i].id == self.current_player.id:
+                return i
 
     async def get_player(self, player_id: int) -> PlayerFull | None:
         """

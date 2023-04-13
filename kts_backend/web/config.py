@@ -14,14 +14,16 @@ if typing.TYPE_CHECKING:
 
 def setup_config(app: "Application", config: dict) -> None:
     """
-    Set up the configuration for the application.
+    Setup configuration for the Application based on the provided config dictionary.
 
-    :param app: The Flask application instance.
-    :type app: Application
-    :param config: A dictionary containing the configuration options for the application.
-    :type config: dict
-    :return: None
+    Args:
+        app (Application): The Application instance for which the configuration is being set up.
+        config (dict): The dictionary containing the configuration settings.
+
+    Returns:
+        None
     """
+    # Extract configuration settings from the config dictionary
     admin_config = AdminConfig(
         email=config["admin"]["email"],
         password=config["admin"]["password"],
@@ -38,6 +40,7 @@ def setup_config(app: "Application", config: dict) -> None:
         key=config["session"]["key"],
     )
 
+    # Create a Config instance with the extracted configuration settings
     app.config = Config(
         admin=admin_config,
         bot=bot_config,

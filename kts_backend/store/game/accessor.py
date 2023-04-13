@@ -165,7 +165,7 @@ class GameAccessor(BaseAccessor):
             chat_message_id=game_model.chat_message_id,
             guessed_word=game_model.guessed_word,
             required_player_count=game_model.required_player_count,
-            previous_player=GameAccessor.player_model2player(
+            previous_player=GameAccessor.player_model2player_full(
                 game_model.previous_player
             ),
             player_list=GameAccessor.player_model_list2player_full_list(
@@ -551,6 +551,23 @@ class GameAccessor(BaseAccessor):
             await session.execute(statement=statement)
             await session.commit()
 
+    async def update_game_by_kwargs(
+        self, game_id: int, previous_player_id: int
+    ):
+        """
+        :param previous_player_id:
+        :param game_id:
+        :return:
+        """
+        statement = (
+            update(GameModel)
+            .filter_by(id=game_id)
+            .values(previous_player_id=previous_player_id)
+        )
+        async with self.app.database.session.begin() as session:
+            await session.execute(statement=statement)
+            await session.commit()
+
     async def get_players_by_chat_id(self, chat_id: str) -> List[Player] | None:
         """
         Get list of Player objects from database by chat_id,
@@ -798,11 +815,11 @@ class GameAccessor(BaseAccessor):
             .options(
                 joinedload(GameModel.previous_player).subqueryload(
                     PlayerModel.user
-                ),
-                joinedload(GameModel.previous_player).subqueryload(
-                    PlayerModel.game
-                ),
+                )
             )
+            # .options(
+            #     joinedload(GameModel.previous_player).subqueryload(PlayerModel.game)
+            # )
         )
         async with self.app.database.session.begin() as session:
             res = await session.execute(statement=statement)

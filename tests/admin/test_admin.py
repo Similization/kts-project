@@ -13,6 +13,7 @@ class TestAdminLoginView:
     working as expected and that it correctly handles a variety of inputs and conditions.
 
     """
+
     async def test_admin_created_on_startup(self, store: Store, config: Config):
         """
         Test that the admin user is created on application startup.
@@ -77,14 +78,14 @@ class TestAdminLoginView:
 
     async def test_invalid_credentials(self, cli):
         """
-          Test that an error is returned when invalid credentials are used for login.
+        Test that an error is returned when invalid credentials are used for login.
 
-          Args:
-              cli (TestClient): A client object for making HTTP requests.
+        Args:
+            cli (TestClient): A client object for making HTTP requests.
 
-          Returns:
-              None
-          """
+        Returns:
+            None
+        """
         resp = await cli.post(
             "/admin.login",
             json={
@@ -121,7 +122,9 @@ class TestAdminLoginView:
 class TestAdminCurrentView:
     """Unit tests for the AdminCurrentView class"""
 
-    async def test_admin_current_view_success(self, authed_cli, admin: Admin, config: Config):
+    async def test_admin_current_view_success(
+        self, authed_cli, admin: Admin, config: Config
+    ):
         """Test the successful behavior of the AdminCurrentView endpoint
 
         Args:

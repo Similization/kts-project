@@ -46,6 +46,7 @@ class VkApiAccessor(BaseAccessor):
         self.poller = Poller(store=app.store)
         self.worker = Worker(store=app.store, concurrent_workers=4)
 
+        await self.app.store.bots_manager.start()
         self.logger.warning(msg="start polling")
         await self.poller.start()
         self.logger.warning(msg="start workers")

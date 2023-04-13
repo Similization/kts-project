@@ -5,17 +5,14 @@ from utils import check_empty_table_exists
 
 class TestAdminStore:
     async def test_table_exists(self, cli):
-        """
-        Tests if the admin table exists in the database
-        :param cli: AsyncioTestClient
-        :return: None
-        """
         await check_empty_table_exists(cli, "admin")
 
     async def test_admin_get_existed(self, store: Store, admin: Admin):
         email = admin.email
         password = admin.password
-        fetched_admin = await store.admin.get_or_create(email=email, password=password)
+        fetched_admin = await store.admin.get_or_create(
+            email=email, password=password
+        )
         assert isinstance(fetched_admin, Admin)
         assert fetched_admin.email == email
 
@@ -33,9 +30,7 @@ class TestAdminStore:
         updated_email = "updated@test.com"
         updated_password = "updated_password"
         updated_admin = await store.admin.update_admin(
-            admin_id=admin.id,
-            email=updated_email,
-            password=updated_password
+            admin_id=admin.id, email=updated_email, password=updated_password
         )
         assert isinstance(updated_admin, Admin)
         assert updated_admin.id == admin.id

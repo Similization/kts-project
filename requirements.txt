@@ -7,6 +7,7 @@ alembic==1.10.2
 asyncpg==0.27.0
 black==23.3.0
 cryptography==40.0.1
+deprecation==2.1.0
 greenlet==2.0.2
 pytest==7.2.2
 pytest_aiohttp==1.0.4

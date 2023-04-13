@@ -28,11 +28,25 @@ if typing.TYPE_CHECKING:
 @middleware
 async def auth_middleware(request: "Request", handler: callable):
     """
-    Authorization middleware.
+    Authentication middleware for web application.
 
-    :param request: Request
-    :param handler: callable
-    :return:
+    This middleware function is used for authentication in a web application. It takes in a `request` object and a
+    `handler` callable as parameters. The `request` parameter represents the incoming HTTP request, and the `handler`
+    parameter represents the next handler in the middleware chain.
+
+    The middleware checks for the presence of a session in the incoming request using the `get_session` function. If
+    a session is found, it is used to create an `Admin` object using the `from_session` method. The `Admin` object
+    is then attached to the `request` object as an attribute named `admin`.
+
+    After the authentication process, the `handler` is called with the modified `request` object to continue processing
+    subsequent middleware or request handlers.
+
+    Args:
+        request (Request): The incoming HTTP request.
+        handler (callable): The next handler in the middleware chain.
+
+    Returns:
+        Response: The response returned by the `handler` after processing the request.
     """
     session = await get_session(request)
     if session:
@@ -54,11 +68,27 @@ HTTP_ERROR_CODES: Dict[int, str] = {
 @middleware
 async def error_handling_middleware(request: "Request", handler: callable):
     """
-    Error handling middleware.
+    Error handling middleware for web application.
 
-    :param request: Request
-    :param handler:
-    :return: callable
+    This middleware function is used for handling errors in a web application. It takes in a `request` object and a
+    `handler` callable as parameters. The `request` parameter represents the incoming HTTP request, and the `handler`
+    parameter represents the next handler in the middleware chain.
+
+    The middleware wraps the execution of the `handler` with error handling logic. If an exception is raised during
+    the execution of the `handler`, the middleware catches specific HTTP exceptions, such as `HTTPBadRequest`,
+    `HTTPUnauthorized`, etc., and generates an error response using the `error_json_response` function with the
+    appropriate HTTP status code, status, message, and data.
+
+    If a caught exception does not have a specific error response defined, a default error response with a status
+    code of 500 and status "Internal Server Error" is generated using the `error_json_response` function.
+
+    Args:
+        request (Request): The incoming HTTP request.
+        handler (callable): The next handler in the middleware chain.
+
+    Returns:
+        Response: The response returned by the `handler` after processing the request, or an error response generated
+        by the middleware.
     """
     try:
         response = await handler(request)
@@ -119,15 +149,20 @@ async def error_handling_middleware(request: "Request", handler: callable):
 
 def setup_middlewares(app: "Application") -> None:
     """
-    Setup middlewares for an application.
+    Setup middlewares for a web application.
 
-    The middlewares are added in the following order:
-    1. Authentication middleware (auth_middleware)
-    2. Error handling middleware (error_handling_middleware)
-    3. Validation middleware (validation_middleware)
+    This function is used to set up middlewares for a web application using the `app` parameter, which represents the
+    application instance. The middlewares are appended to the `middlewares` list of the application instance.
 
-    :param app: An instance of the Application class or a subclass of it.
-    :return: None
+    The middlewares are functions or coroutines that can process incoming HTTP requests and responses before they
+    reach the route handlers. They can be used for various purposes, such as authentication, error handling, request
+    validation, etc.
+
+    Args:
+        app (Application): The web application instance.
+
+    Returns:
+        None
     """
     app.middlewares.append(auth_middleware)
     app.middlewares.append(error_handling_middleware)

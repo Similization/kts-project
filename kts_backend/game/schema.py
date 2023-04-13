@@ -3,13 +3,25 @@ from typing import List
 
 
 class GameDataByIdSchema(Schema):
-    """Schema for retrieving a single game data object by ID."""
+    """
+    A schema representing game data by ID.
+
+    Attributes:
+        id (int): The ID of the game data.
+    """
 
     id: int = fields.Int(required=True, description="The ID of the game data.")
 
 
 class GameDataSchema(Schema):
-    """Schema for representing game data."""
+    """
+    A schema representing game data.
+
+    Attributes:
+        id (int, optional): The ID of the game data.
+        question (str): The question associated with the game data.
+        answer (str): The answer associated with the game data.
+    """
 
     id: int = fields.Int(required=False, description="The ID of the game data.")
     question: str = fields.Str(
@@ -21,7 +33,12 @@ class GameDataSchema(Schema):
 
 
 class GameDataListSchema(Schema):
-    """Schema for representing a list of game data objects."""
+    """
+    A schema representing a list of game data.
+
+    Attributes:
+        game_data_list (list of GameDataSchema, optional): A list of game data objects.
+    """
 
     game_data_list: List[GameDataSchema] = fields.Nested(
         GameDataSchema,

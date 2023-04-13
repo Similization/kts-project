@@ -1,13 +1,5 @@
 name: Check project
-
-on:
-  push:
-    branches:
-      - main
-#      - dev
-#      - init2
-      - init3
-
+on: [push]
 jobs:
   black:
     runs-on: ubuntu-latest

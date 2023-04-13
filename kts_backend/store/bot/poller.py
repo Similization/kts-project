@@ -2,17 +2,38 @@ import asyncio
 import logging
 from asyncio import Task
 
+import deprecation
+
 from kts_backend.store import Store
 
 
+@deprecation.deprecated(
+    deprecated_in="0.1a", removed_in="0.2", details="Use vk_api.Poller instead"
+)
 class Poller:
     """
-    A class for polling the VK API for updates and handling them using a BotsManager object.
+    The `Poller` class is responsible for polling the VK API for new updates and forwarding them to the `BotsManager`
+    for processing.
+
+    Attributes:
+        store (Store): The `Store` instance to use for retrieving the VK API and `BotsManager`.
+        is_running (bool): Whether the poller is currently running.
+        poll_task (Task | None): The `Task` instance created to run the poll loop, or `None` if the poller is not
+                                  running.
+        logger (logging.Logger): The logger instance to use for logging debug information.
+
+    Methods:
+        start(): Starts the poller.
+        stop(): Stops the poller.
+        poll(): Polls the VK API for new updates and forwards them to the `BotsManager` for processing.
     """
 
     def __init__(self, store: Store):
         """
-        Initialize a new Poller object with the given Store object.
+        Initializes a new instance of the `Poller` class.
+
+        Args:
+            store (Store): The `Store` instance to use for retrieving the VK API and `BotsManager`.
         """
         self.store = store
         self.is_running = False
@@ -21,14 +42,15 @@ class Poller:
 
     async def start(self):
         """
-        Start polling for updates from the VK API and handle them using the BotsManager.
+        Starts the poller by creating a new task to run the poll loop.
         """
         self.is_running = True
         self.poll_task = asyncio.create_task(self.poll())
 
     async def stop(self) -> None:
         """
-        Stop polling and wait for the poll task to complete.
+        Stops the poller by setting the `is_running` flag to False and awaiting the completion of the poll task, if it
+        is running.
         """
         self.is_running = False
         if self.poll_task:
@@ -36,7 +58,8 @@ class Poller:
 
     async def poll(self) -> None:
         """
-        Continuously poll the VK API for updates and handle them using the BotsManager.
+        The main loop that polls the VK API for new updates and forwards them to the `BotsManager` for processing. Runs
+        in a continuous loop while the `is_running` flag is True.
         """
         while self.is_running:
             try:

@@ -31,6 +31,7 @@ class GameDataAddView(View):
         Returns:
         A JSON response with the newly created GameData object.
         """
+
         question = self.data["question"]
         answer = self.data["answer"]
         game_data: GameData = await self.store.game.create_game_data(
@@ -60,6 +61,7 @@ class GameDataListGetView(View):
         Returns:
         A JSON response with the list of GameData objects.
         """
+
         game_data_list: List[
             GameData
         ] | None = await self.store.game.get_game_data_list()

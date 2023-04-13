@@ -4,15 +4,17 @@ from typing import List
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from kts_backend.game.model import (
-    GameModel,
-    PlayerModel,
-    GameDataModel,
-)
 from kts_backend.game.dataclasses import (
     Game,
     GameData,
     Player,
+    GameFull,
+    PlayerFull,
+)
+from kts_backend.game.model import (
+    GameModel,
+    PlayerModel,
+    GameDataModel,
 )
 from kts_backend.store import Store
 from kts_backend.user.dataclasses import User
@@ -21,10 +23,6 @@ from kts_backend.user.model import UserModel
 
 @pytest.fixture
 def users(store: Store) -> list[User]:
-    """
-    :param store:
-    :return:
-    """
     return [
         User(id=1, vk_id=100, name="Dan", last_name="Ban", username="@db"),
         User(
@@ -46,12 +44,6 @@ def users(store: Store) -> list[User]:
 
 @pytest.fixture
 def players_1(store: Store, user_1: User, user_2: User) -> list[PlayerModel]:
-    """
-    :param user_2:
-    :param user_1:
-    :param store:
-    :return:
-    """
     return [
         PlayerModel(
             id=1,
@@ -76,13 +68,6 @@ def players_1(store: Store, user_1: User, user_2: User) -> list[PlayerModel]:
 def players_2(
     store: Store, user_1: User, user_2: User, user_3: User
 ) -> list[PlayerModel]:
-    """
-    :param user_3:
-    :param user_2:
-    :param user_1:
-    :param store:
-    :return:
-    """
     return [
         PlayerModel(
             id=1,
@@ -105,6 +90,38 @@ def players_2(
             user_id=user_3.id,
             score=45,
             game_id=3,
+            in_game=True,
+            is_winner=False,
+        ),
+    ]
+
+
+@pytest.fixture
+def players_full(
+    store: Store, user_1: User, user_2: User, user_3: User
+) -> list[PlayerFull]:
+    return [
+        PlayerFull(
+            id=1,
+            user=user_1,
+            score=35,
+            game=None,
+            in_game=True,
+            is_winner=False,
+        ),
+        PlayerFull(
+            id=2,
+            user=user_2,
+            score=70,
+            game=None,
+            in_game=True,
+            is_winner=False,
+        ),
+        PlayerFull(
+            id=3,
+            user=user_3,
+            score=45,
+            game=None,
             in_game=True,
             is_winner=False,
         ),
@@ -169,6 +186,30 @@ async def user_3(db_session: AsyncSession) -> User:
     name = "Анна"
     last_name = "Панн"
     username = "@pannanna"
+    new_user = UserModel(
+        vk_id=vk_id, name=name, last_name=last_name, username=username
+    )
+    async with db_session.begin() as session:
+        session.add(new_user)
+    return User(
+        id=new_user.id,
+        vk_id=vk_id,
+        name=name,
+        last_name=last_name,
+        username=username,
+    )
+
+
+@pytest.fixture
+async def user_4(db_session: AsyncSession) -> User:
+    """
+    :param db_session:
+    :return:
+    """
+    vk_id = 239360739
+    name = "Мария"
+    last_name = "Нестерова"
+    username = "@manest"
     new_user = UserModel(
         vk_id=vk_id, name=name, last_name=last_name, username=username
     )
@@ -279,7 +320,9 @@ async def game_1(db_session: AsyncSession, game_data_1: GameData) -> Game:
 
 @pytest.fixture
 async def game_2(
-    db_session: AsyncSession, players_1: List[Player], game_data_2: GameData
+    db_session: AsyncSession,
+    players_1: List[PlayerModel],
+    game_data_2: GameData,
 ) -> Game:
     """
     :param db_session:
@@ -326,7 +369,9 @@ async def game_2(
 
 @pytest.fixture
 async def game_3(
-    db_session: AsyncSession, players_2: List[Player], game_data_3: GameData
+    db_session: AsyncSession,
+    players_2: List[PlayerModel],
+    game_data_3: GameData,
 ) -> Game:
     """
     :param db_session:
@@ -367,7 +412,9 @@ async def game_3(
 
 @pytest.fixture
 async def game_4(
-    db_session: AsyncSession, players_2: List[Player], game_data_3: GameData
+    db_session: AsyncSession,
+    players_2: List[PlayerModel],
+    game_data_3: GameData,
 ) -> Game:
     """
     :param db_session:
@@ -405,6 +452,65 @@ async def game_4(
         required_player_count=new_game.required_player_count,
         previous_player_id=players_2[0].id,
         player_list=players_2,
+    )
+
+
+@pytest.fixture
+async def game_full_1(
+    db_session: AsyncSession,
+    players_full: List[PlayerFull],
+    game_data_3: GameData,
+) -> GameFull:
+    game_data_id = game_data_3.id
+    chat_id: str = "2"
+    finished_at = datetime.datetime.strptime(
+        "2023-02-24 20:02:22.000000",
+        "%Y-%m-%d %H:%M:%S.%f",
+    )
+
+    new_game = GameModel(
+        game_data_id=game_data_id, chat_id=chat_id, finished_at=finished_at
+    )
+
+    async with db_session.begin() as session:
+        session.add(new_game)
+
+    player_model_list: List[PlayerModel] = [
+        PlayerModel(
+            id=player.id,
+            user_id=player.user.id,
+            score=player.score,
+            game_id=new_game.id,
+            in_game=player.in_game,
+            is_winner=player.is_winner,
+        )
+        for player in players_full
+    ]
+    async with db_session.begin() as session:
+        for player_model in player_model_list:
+            session.add(player_model)
+
+    player_full: PlayerFull = players_full[2]
+    previous_player: PlayerFull = PlayerFull(
+        id=player_full.id,
+        user=player_full.user,
+        game=new_game,
+        score=player_full.score,
+        in_game=player_full.in_game,
+        is_winner=player_full.is_winner,
+    )
+
+    return GameFull(
+        id=new_game.id,
+        game_data=game_data_3,
+        created_at=new_game.created_at,
+        finished_at=new_game.finished_at,
+        chat_id=chat_id,
+        chat_message_id=new_game.chat_message_id,
+        guessed_word=new_game.guessed_word,
+        required_player_count=new_game.required_player_count,
+        previous_player=previous_player,
+        player_list=players_full,
     )
 
 
@@ -478,6 +584,27 @@ async def player_3(
         id=new_player.id,
         user_id=user_id,
         game_id=game_1.id,
+        score=new_player.score,
+        is_winner=new_player.is_winner,
+        in_game=new_player.in_game,
+    )
+
+
+@pytest.fixture
+async def player_full(
+    db_session: AsyncSession, user_4: User, game_1: Game
+) -> PlayerFull:
+    user_id = user_4.id
+    game_id = game_1.id
+
+    new_player = PlayerModel(id=4, user_id=user_id, game_id=game_id)
+    async with db_session.begin() as session:
+        session.add(new_player)
+
+    return PlayerFull(
+        id=new_player.id,
+        user=user_4,
+        game=game_1,
         score=new_player.score,
         is_winner=new_player.is_winner,
         in_game=new_player.in_game,

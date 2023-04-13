@@ -44,6 +44,7 @@ class UserGetView(View):
 
         :return: Response with user information.
         """
+
         user_id: int = self.data["user_id"]
         user = await self.store.user.get_user(user_id=user_id)
         return json_response(data=UserSchema().dump(obj=user))
@@ -81,6 +82,7 @@ class UserGetManyView(View):
 
         :return: Response with user information.
         """
+
         user_id_list: List[int] = self.data["user_id_list"]
         user_list = await self.store.user.get_user(user_id=user_id_list)
         raw_users = [UserSchema().dump(obj=user) for user in user_list]

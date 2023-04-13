@@ -7,25 +7,39 @@ if typing.TYPE_CHECKING:
 
 class BaseAccessor:
     """
-    Base class for implementing database accessors.
+    A base class for creating database accessors.
 
-    Subclasses must implement the `connect` and `disconnect` methods to establish and close connections to the database,
-    respectively.
+    Attributes:
+        app (Application): The application object.
+        logger (Logger): The logger object for logging messages.
 
-    :param app: The aiohttp web application instance.
-    :type app: Application
+    Methods:
+        __init__(self, app: Application, *args: tuple, **kwargs: dict) -> None:
+            Initializes the BaseAccessor object and registers connect and disconnect methods
+            to be called on application start-up and shutdown, respectively.
+
+        async connect(self, app: Application) -> None:
+            This method is called on application start-up and should be overridden by child classes
+            to establish a connection to the database.
+
+        async disconnect(self, app: Application) -> None:
+            This method is called on application shutdown and should be overridden by child classes
+            to disconnect from the database.
+
     """
 
     def __init__(self, app: "Application", *args: tuple, **kwargs: dict):
         """
-        Initialize a new instance of the BaseAccessor class.
+        Initializes the BaseAccessor object and registers connect and disconnect methods
+        to be called on application start-up and shutdown, respectively.
 
-        :param app: The aiohttp web application instance.
-        :type app: Application
-        :param args: Additional positional arguments to be passed to the `connect` and `disconnect` methods.
-        :type args: tuple
-        :param kwargs: Additional keyword arguments to be passed to the `connect` and `disconnect` methods.
-        :type kwargs: dict
+        Args:
+            app (Application): The application object.
+            *args: Any extra arguments to be passed to child classes.
+            **kwargs: Any extra keyword arguments to be passed to child classes.
+
+        Returns:
+            None
         """
         self.app = app
         self.logger = getLogger("accessor")
@@ -36,22 +50,26 @@ class BaseAccessor:
 
     async def connect(self, app: "Application") -> None:
         """
-        Method to establish a connection to the database.
+        This method is called on application start-up and should be overridden by child classes
+        to establish a connection to the database.
 
-        This method should be implemented by subclasses.
+        Args:
+            app (Application): The application object.
 
-        :param app: The aiohttp web application instance.
-        :type app: Application
+        Returns:
+            None
         """
         return
 
     async def disconnect(self, app: "Application") -> None:
         """
-        Method to close the connection to the database.
+        This method is called on application shutdown and should be overridden by child classes
+        to disconnect from the database.
 
-        This method should be implemented by subclasses.
+        Args:
+            app (Application): The application object.
 
-        :param app: The aiohttp web application instance.
-        :type app: Application
+        Returns:
+            None
         """
         return

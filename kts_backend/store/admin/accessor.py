@@ -9,12 +9,29 @@ from kts_backend.base.base_accessor import BaseAccessor
 
 
 class AdminAccessor(BaseAccessor):
+    """
+    A class providing methods for accessing and manipulating admin data in the database.
+
+    Methods:
+        admin_model2admin: Convert an AdminModel instance to an Admin instance.
+        admin2dict: Convert an Admin instance to a dictionary.
+        get_by_email: Get an admin user by email.
+        get_or_create: Get an admin user by email or create a new one.
+        update_admin: Update an admin user's email and password by ID.
+        delete_admin: Delete an admin user by ID.
+        delete_admin_by_email: Delete an admin user by email.
+    """
+
     @staticmethod
     def admin_model2admin(admin_model: AdminModel) -> Admin:
         """
-        Convert AdminModel object to Admin object
-        :param admin_model: AdminModel
-        :return: Admin
+        Convert an `AdminModel` instance to an `Admin` instance.
+
+        Args:
+            admin_model (AdminModel): The `AdminModel` instance to convert.
+
+        Returns:
+            Admin: The `Admin` instance.
         """
         return Admin(
             id=admin_model.id,
@@ -25,17 +42,25 @@ class AdminAccessor(BaseAccessor):
     @staticmethod
     def admin2dict(admin: Admin) -> dict:
         """
-        Convert AdminModel object to dict object
-        :param admin: Admin
-        :return: dict
+        Convert an `Admin` instance to a dictionary.
+
+        Args:
+            admin (Admin): The `Admin` instance to convert.
+
+        Returns:
+            dict: The dictionary representation of the `Admin` instance.
         """
         return asdict(admin)
 
     async def get_by_email(self, email: str) -> Admin | None:
         """
-        Get Admin object from database, otherwise return None
-        :param email: str
-        :return: Admin | None
+        Get an admin user by email.
+
+        Args:
+            email (str): The email of the admin user.
+
+        Returns:
+            Admin | None: The `Admin` instance if found, else `None`.
         """
         statement = select(AdminModel).filter_by(email=email)
         async with self.app.database.session.begin() as session:
@@ -48,11 +73,14 @@ class AdminAccessor(BaseAccessor):
 
     async def get_or_create(self, email: str, password: str) -> Admin:
         """
-        Create Admin object in database and return it if it does not exist,
-        otherwise return existed one
-        :param email: str
-        :param password: str
-        :return: Admin
+        Get an admin user by email or create a new one.
+
+        Args:
+            email (str): The email of the admin user.
+            password (str): The password of the admin user.
+
+        Returns:
+            Admin: The `Admin` instance.
         """
         admin: Admin | None = await self.get_by_email(email=email)
         if admin is not None:
@@ -73,11 +101,15 @@ class AdminAccessor(BaseAccessor):
         self, admin_id: int, email: str, password: str
     ) -> Admin:
         """
-        Update existing Admin object in database and return it
-        :param admin_id: int
-        :param email: str
-        :param password: str
-        :return: Admin
+        Update an admin user's email and password by ID.
+
+        Args:
+            admin_id (int): The ID of the admin user.
+            email (str): The new email of the admin user.
+            password (str): The new password of the admin user.
+
+        Returns:
+            Admin: The updated `Admin` instance.
         """
         new_password = sha256(password.encode()).hexdigest()
         statement = (
@@ -93,9 +125,13 @@ class AdminAccessor(BaseAccessor):
 
     async def delete_admin(self, admin_id: int) -> Admin | None:
         """
-        Delete Admin by id from database, otherwise return None
-        :param admin_id: int
-        :return: Admin | None
+        Deletes an Admin instance with the specified ID.
+
+        Args:
+            admin_id (int): The ID of the Admin instance to be deleted.
+
+        Returns:
+            Admin | None: The deleted Admin instance if it exists, otherwise None.
         """
         statement = (
             delete(AdminModel).filter_by(id=admin_id).returning(AdminModel)
@@ -110,9 +146,13 @@ class AdminAccessor(BaseAccessor):
 
     async def delete_admin_by_email(self, email: str) -> Admin | None:
         """
-        Delete Admin by email from database, otherwise return None
-        :param email: str
-        :return: Admin | None
+        Deletes an Admin instance with the specified email.
+
+        Args:
+            email (str): The email of the Admin instance to be deleted.
+
+        Returns:
+            Admin | None: The deleted Admin instance if it exists, otherwise None.
         """
         statement = (
             delete(AdminModel).filter_by(email=email).returning(AdminModel)

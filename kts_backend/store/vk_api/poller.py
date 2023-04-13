@@ -71,4 +71,4 @@ class Poller:
                     Message(json.dumps(asdict(update)).encode(), user_id=None),
                     routing_key=self.queue.name,
                 )
-            # logging.basicConfig(level=logging.DEBUG)
+            logging.basicConfig(level=logging.DEBUG)

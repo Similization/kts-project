@@ -5,7 +5,21 @@ from typing import Optional
 
 @dataclass(slots=True)
 class Admin:
-    """A class representing an admin user"""
+    """
+    A class representing an admin user.
+
+    Attributes:
+        id (int): The unique identifier for the admin.
+        email (str): The email address associated with the admin.
+        user_id (int | None): The ID of the User associated with the admin, or None if not applicable.
+        password (str | None): The hashed password for the admin, or None if not applicable.
+
+    Methods:
+        is_password_valid(password: str) -> bool:
+            Checks if the given password is correct for the admin.
+        from_session(session: dict | None) -> Optional[Admin]:
+            Returns an Admin object from a given session.
+    """
 
     id: int
     email: str

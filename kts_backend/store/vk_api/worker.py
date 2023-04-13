@@ -40,7 +40,7 @@ class Worker:
             Connects to the message queue and begins consuming messages.
 
         worker_loop():
-            The main loop for each worker thread. Consumes messages from the asyncio queue and passes them to `process_message`.
+            The main loop for each worker thread. Consume messages from the asyncio queue and passes them to `process_message`.
 
         start():
             Connects to the message queue and starts the worker threads.

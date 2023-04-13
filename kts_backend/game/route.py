@@ -3,9 +3,13 @@ from kts_backend.web.app import Application
 
 def setup_routes(app: Application) -> None:
     """
-    Setup routes /game_data route.<method> for application
-    :param app: Application
-    :return: None
+    Set up the routes for the application.
+
+    Args:
+        app (Application): The application instance to set up the routes for.
+
+    Returns:
+        None
     """
     from kts_backend.game.view import GameDataAddView
     from kts_backend.game.view import GameDataListGetView
