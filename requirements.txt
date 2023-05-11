@@ -1,6 +1,17 @@
-aiohttp==3.8.1
-black==22.6.0
-pytest==7.1.2
-pytest-aiohttp==1.0.4
-pytest-asyncio==0.19.0
-pytest-env==0.6.2
+aiohttp==3.8.4
+aiohttp-apispec==2.2.3
+aiohttp-cors==0.7.0
+aiohttp_session==2.12.0
+aio_pika==9.0.5
+alembic==1.10.2
+asyncpg==0.27.0
+black==23.3.0
+cryptography==40.0.1
+deprecation==2.1.0
+greenlet==2.0.2
+pytest==7.2.2
+pytest_aiohttp==1.0.4
+PyYAML==6.0
+SQLAlchemy==2.0.7
+# asyncpool==1.0
+

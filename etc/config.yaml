@@ -1,10 +1,29 @@
 debug: true
+
 web:
   host: 127.0.0.1
-  port: 8000
+  port: 8080
 
 sentry:
   dsn:
   env: dev
 
-store: {}
+session:
+  key: CaY5iCkYtN7DqXdiYK1BvmGrQuaSA4Tl4bEk9my0jc0=
+
+bot:
+  key: vk1.a.zjtph5Nkd3ZIYcwtDhJNZrjIToXsI-afVKYhjlssL_iA-Oxu6oFdOJaX__NlKfCADnbgs2_0s8WUXl59c3068mDsHWV5zRCy3QXUmP2USwuerm07mXdyQiLT9UJ9Dq6rT5F7s_Lhdq_h4gmwwaG9Kz6-ppKaTVoV-P78v7UBtQWJyQnjXPhztfHiK6T36NTPAKkBeq88RYOrHPUzQLjOkw
+  group_id: 218765338
+
+admin:
+  email: borbri228@gmail.com
+  password: secret228
+
+database:
+  type: release
+  host: 0.0.0.0
+  port: 5432
+  user: postgres
+  password: mysecretpassword
+  database: kts_project
+
